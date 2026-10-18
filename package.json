@@ -1,0 +1,34 @@
+{
+  "name": "tunestra",
+  "version": "0.0.0",
+  "description": "Tune your AI agents to play as one orchestra: one source of rules, skills, MCP and hooks for Claude Code, Codex and more. Coming soon.",
+  "keywords": [
+    "ai",
+    "agents",
+    "claude-code",
+    "codex",
+    "agents-md",
+    "skills",
+    "mcp",
+    "cli"
+  ],
+  "homepage": "https://github.com/sensetive5/tunestra#readme",
+  "bugs": {
+    "url": "https://github.com/sensetive5/tunestra/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sensetive5/tunestra.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tunestra": "bin/tunestra.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=22"
+  }
+}
