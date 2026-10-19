@@ -4,3 +4,9 @@ coverage/
 *.log
 *.tgz
 .DS_Store
+
+# Fixtures contain agent directories on purpose
+!test/fixtures/**/.claude/
+!test/fixtures/**/.agents/
+!test/fixtures/**/.tunestra/
+!test/fixtures/**/.mcp.json
