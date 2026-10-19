@@ -1,0 +1,6 @@
+description: Issue tracker
+command: npx
+args: ["-y", "<tracker_mcp_package>"]
+env:
+  TRACKER_URL: https://tracker.example.com
+  QUEUE: COMMON

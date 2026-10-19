@@ -1,0 +1,4 @@
+name: project
+extends:
+  - ../presets/team
+agents: [claude]

@@ -1,0 +1,8 @@
+# >>> tunestra (generated, do not edit)
+/.agents/
+/.claude/rules/tunestra/
+/.claude/skills/
+/.claude/commands/
+/.mcp.json
+/.tunestra/state/
+# <<< tunestra

@@ -1,0 +1,12 @@
+name: team
+level: team
+description: Frontend team conventions
+extends:
+  - ../base
+exclude:
+  skills: [code-review]
+overrides:
+  mcp:
+    tracker:
+      env:
+        QUEUE: TEAM

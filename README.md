@@ -2,20 +2,188 @@
 
 > Tune your AI agents to play as one orchestra.
 
-**Status: early development. Nothing to use yet.**
+> [!WARNING]
+> **Early development.** This README is the specification of the first release (v0.1).
+> It describes the target behavior; not everything is implemented yet.
 
-tunestra gives Claude Code, Codex and other AI coding agents one shared source of
-rules, skills, commands, MCP servers and hooks — and generates each agent's native
-configuration from it.
+tunestra gives Claude Code, Codex and other AI coding agents **one shared source** of rules,
+skills, commands and MCP servers, and generates each agent's native configuration from it.
 
-Planned:
+The source is a chain of **presets**, from general to specific:
 
-- **Inheritance from general to specific.** Organization → domain → team → project → personal
-  levels. More specific levels override general ones by artifact key or exclude them.
-- **One source for every agent.** Built on open standards: `AGENTS.md` and Agent Skills (`SKILL.md`).
-- **Policies.** Upper levels can mark artifacts as `required` or `locked`, checked in CI.
-- **Spaces.** Share presets through git or npm.
-- **Generated, never hand-edited.** Every run rebuilds agent configs from the sources.
+```
+base      — your organization: security, general principles, shared tools
+  ↓ extends
+team      — your team: conventions, stack, team skills
+  ↓ extends
+project   — this repository: architecture, domain model, project skills
+```
+
+More specific levels **override** general ones by artifact key or **exclude** them.
+Agents receive the result from specific to general: when two instructions conflict, the more
+specific one wins.
+
+## Quick start
+
+```sh
+npx tunestra init     # creates tunestra.yaml and .tunestra/
+npx tunestra setup    # generates AGENTS.md, CLAUDE.md, .claude/, .agents/, .mcp.json
+```
+
+`tunestra.yaml`:
+
+```yaml
+extends:
+  - github:<organisation_name>/<presets_repo>/team#v1
+agents: [claude]
+```
+
+Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md` and `CLAUDE.md`. Everything else that
+tunestra generates is listed in `.gitignore` automatically.
+
+## Principles
+
+1. **Sources are the only truth.** Presets and `.tunestra/` are edited by people.
+   Everything tunestra writes for agents is generated.
+2. **Generated files are never edited by hand.** Every `tunestra setup` rebuilds them from
+   scratch. A manual edit is overwritten with a warning that tells you which source to change.
+3. **Open standards first.** Rules follow [`AGENTS.md`](https://agents.md), skills follow
+   [Agent Skills](https://agentskills.io) (`SKILL.md`), MCP servers use the `.mcp.json` shape.
+
+## Presets
+
+A preset is a directory with a fixed layout. Artifacts are collected from the folders;
+the manifest only holds metadata and overrides.
+
+```
+<preset>/
+  tunestra.preset.yaml      # manifest
+  AGENTS.md                 # optional: main instructions of this level
+  rules/<key>.md            # rules, one topic per file
+  skills/<key>/SKILL.md     # skills (Agent Skills format)
+  commands/<key>.md         # slash commands
+  mcp/<key>.yaml            # MCP servers
+```
+
+### Manifest: `tunestra.preset.yaml`
+
+```yaml
+name: team                  # required, unique in the chain
+level: team                 # required: base | domain | team
+description: Frontend team conventions
+extends:                    # optional, from general to specific
+  - ../base
+exclude:                    # optional: drop inherited artifacts by key
+  skills: [code-review]
+overrides:                  # optional: patch inherited MCP servers
+  mcp:
+    tracker:
+      env:
+        QUEUE: TEAM
+```
+
+### Project: `tunestra.yaml`
+
+The project is the most specific level. Its artifacts live in `.tunestra/` with the same layout
+as a preset.
+
+```yaml
+name: my-service            # optional, defaults to the directory name
+extends:
+  - ../presets/team
+agents: [claude]            # v0.1 supports claude
+exclude: {}
+overrides: {}
+```
+
+### Sources
+
+| Reference | Example |
+|---|---|
+| Relative path | `../presets/team` (relative to the file that references it) |
+| GitHub | `github:<owner>/<repo>/<path>#<ref>` |
+| GitLab | `gitlab:<owner>/<repo>/<path>#<ref>` |
+
+Pin git sources to a tag or commit. Lockfiles and npm sources are planned for v0.3.
+
+## Inheritance
+
+The chain is linearized from general to specific: every preset comes after the presets it
+extends. Each level is applied on top of the accumulated result.
+
+### Artifact keys
+
+| Artifact | Key | Same key on a more specific level | Remove |
+|---|---|---|---|
+| Rule | file name without `.md` | replaces it | `exclude.rules` |
+| Level instructions (`AGENTS.md`) | `instructions@<preset name>` | never collides: every level keeps its own | `exclude.rules` |
+| Skill | `name` from `SKILL.md`, otherwise the folder name | replaces it | `exclude.skills` |
+| Command | file name without `.md` | replaces it | `exclude.commands` |
+| MCP server | file name without `.yaml` | replaces it | `exclude.mcp` |
+
+`overrides.mcp.<key>` patches an inherited server instead of replacing it: `env` and `headers`
+are merged by key (the specific value wins); `command`, `args` and `url` are replaced.
+
+### Validation
+
+`tunestra setup` stops with an error when:
+
+- a preset extends a more specific level (for example, `base` extends `team`);
+- `extends` contains a cycle;
+- a manifest has an unknown field or a missing required field;
+- `exclude` or `overrides` refers to a key that is not inherited.
+
+## What gets generated (Claude Code)
+
+| Path | Content | Committed |
+|---|---|---|
+| `AGENTS.md` | Index: hierarchy, rules, skills, commands, MCP servers | yes |
+| `CLAUDE.md` | `@AGENTS.md` | yes |
+| `.agents/rules/<NN>-<level>-<key>.md` | Rule texts, ordered from specific to general | no |
+| `.agents/skills/<key>/` | Skills | no |
+| `.claude/rules/tunestra/<NN>-<level>-<key>.md` | Copies of the rules; Claude Code loads them in every session | no |
+| `.claude/skills/<key>` | Symlinks to `.agents/skills/<key>` | no |
+| `.claude/commands/<key>.md` | Commands | no |
+| `.mcp.json` | MCP servers | no |
+| `.tunestra/state/` | What tunestra generated last time | no |
+| `.gitignore` | A block between `# >>> tunestra` and `# <<< tunestra` | yes |
+
+`<NN>` orders rules from specific to general: `10` project, `20` team, `30` domain, `40` base.
+
+Every generated rule starts with its origin:
+
+```md
+<!-- Generated by tunestra from team:rules/code-style.md. Do not edit. -->
+> Level: team, preset: team. Overrides: base.
+```
+
+Skills and commands are copied as is: their frontmatter must stay on the first line.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `tunestra init` | Creates `tunestra.yaml` and `.tunestra/`. Moves an existing hand-written `AGENTS.md` to `.tunestra/AGENTS.md` and `CLAUDE.md` to `.tunestra/rules/claude-md.md` |
+| `tunestra setup` | Resolves the chain and regenerates every output |
+| `tunestra setup --dry-run` | Prints what would be created, updated or removed |
+| `tunestra setup --verbose` | Also prints where every artifact comes from |
+| `tunestra uninstall` | Removes everything tunestra generated |
+
+`tunestra setup` refuses to overwrite an `AGENTS.md` or `CLAUDE.md` that it did not generate
+and asks you to run `tunestra init` first.
+
+## Roadmap
+
+| Release | Scope |
+|---|---|
+| v0.1 | Inheritance for Claude Code (this document) |
+| v0.2 | Codex |
+| v0.3 | Spaces, npm sources, lockfile |
+| v0.4 | `required` / `locked` policies, CI check |
+| v0.5 | Hooks |
+| v0.6 | LLM gateway, permissions |
+| v0.7 | Local plugins |
+| v0.8 | Isolated remote plugins |
 
 ## License
 

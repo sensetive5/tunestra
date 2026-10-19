@@ -1,0 +1,4 @@
+{
+  ".claude/skills/domain-model": "../../.agents/skills/domain-model",
+  ".claude/skills/storybook": "../../.agents/skills/storybook"
+}
