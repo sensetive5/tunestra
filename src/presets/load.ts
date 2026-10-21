@@ -5,81 +5,23 @@ import { parse } from 'yaml';
 import type { z } from 'zod';
 import { prettifyError } from 'zod';
 import { TunestraError } from '../errors.ts';
+import {
+  INSTRUCTIONS_FILE,
+  PRESET_MANIFEST,
+  PROJECT_CONFIG,
+  PROJECT_DIR,
+} from '../shared/constants/files.ts';
+import type { Command, McpServer, Preset, Project, Rule, Skill } from '../shared/types/preset.ts';
 import { parseFrontmatter } from './frontmatter.ts';
 import {
-  type Agent,
   commandFrontmatterSchema,
-  type Exclude,
-  type McpConfig,
   mcpServerSchema,
-  type Overrides,
   presetManifestSchema,
   projectConfigSchema,
   ruleFrontmatterSchema,
   skillFrontmatterSchema,
   skillName,
 } from './schema.ts';
-
-export const PRESET_MANIFEST = 'tunestra.preset.yaml';
-export const PROJECT_CONFIG = 'tunestra.yaml';
-export const PROJECT_DIR = '.tunestra';
-
-export type Level = 'project' | 'domain' | 'team' | 'base';
-
-/** Paths in artifacts are relative to the preset's artifact directory. */
-export type Rule = {
-  key: string;
-  source: string;
-  description: string | undefined;
-  /** Rule text without frontmatter. */
-  body: string;
-};
-
-export type Skill = {
-  key: string;
-  /** The skill directory. */
-  source: string;
-  description: string;
-  /** Every file of the skill, relative to its directory. */
-  files: string[];
-};
-
-export type Command = {
-  key: string;
-  source: string;
-  description: string | undefined;
-  /** The whole file, frontmatter included: agents read it. */
-  content: string;
-};
-
-export type McpServer = {
-  key: string;
-  source: string;
-  description: string | undefined;
-  config: McpConfig;
-};
-
-export type Preset = {
-  name: string;
-  level: Level;
-  description: string | undefined;
-  /** Directory of the manifest; `extends` is resolved against it. */
-  dir: string;
-  /** Directory with rules/, skills/, commands/ and mcp/. */
-  artifactsDir: string;
-  extends: string[];
-  exclude: Exclude;
-  overrides: Overrides;
-  rules: Rule[];
-  skills: Skill[];
-  commands: Command[];
-  mcp: McpServer[];
-};
-
-export type Project = Preset & {
-  level: 'project';
-  agents: Agent[];
-};
 
 export function instructionsKey(presetName: string): string {
   return `instructions@${presetName}`;
@@ -147,14 +89,14 @@ async function loadArtifacts(
 async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
   const rules: Rule[] = [];
 
-  const instructionsPath = join(dir, 'AGENTS.md');
+  const instructionsPath = join(dir, INSTRUCTIONS_FILE);
   const hasInstructions = await exists(instructionsPath);
   if (hasInstructions) {
     const key = instructionsKey(presetName);
     const body = await readFile(instructionsPath, 'utf8');
     rules.push({
       key,
-      source: 'AGENTS.md',
+      source: INSTRUCTIONS_FILE,
       description: undefined,
       body,
     });

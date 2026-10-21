@@ -1,5 +1,6 @@
 import { parse } from 'yaml';
 import { TunestraError } from '../errors.ts';
+import type { Frontmatter } from '../shared/types/frontmatter.ts';
 
 /**
  * A YAML block between two `---` lines at the very start of the file.
@@ -10,11 +11,6 @@ import { TunestraError } from '../errors.ts';
  * Does not match: "# Title\n---\nkey: value\n---"         (not at the start of the file)
  */
 const FRONTMATTER_PATTERN = /^---\r?\n(?:([\s\S]*?)\r?\n)?---(?:\r?\n|$)/;
-
-export type Frontmatter = {
-  data: Record<string, unknown>;
-  body: string;
-};
 
 /** Splits a markdown file into YAML frontmatter and body. A file without frontmatter has empty data. */
 export function parseFrontmatter(text: string, file: string): Frontmatter {
