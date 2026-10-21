@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!test/fixtures"]
+    "includes": ["**", "!src/__specs__/fixtures"]
   },
   "formatter": {
     "enabled": true,
@@ -18,7 +18,15 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "useConsistentArrayType": {
+          "level": "error",
+          "options": {
+            "syntax": "generic"
+          }
+        }
+      }
     }
   },
   "javascript": {
