@@ -33,6 +33,10 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter('---\n---\nText', 'a.md')).toEqual({ data: {}, body: 'Text' });
   });
 
+  it('rejects frontmatter that is not key-value pairs', () => {
+    expect(() => parseFrontmatter('---\n- a\n- b\n---\n', 'a.md')).toThrow('key-value pairs');
+  });
+
   it('names the file when YAML is broken', () => {
     expect(() => parseFrontmatter('---\nkey: [\n---\n', 'a.md')).toThrow('a.md');
   });

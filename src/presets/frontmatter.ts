@@ -42,5 +42,5 @@ function parseYaml(text: string, file: string): unknown {
 
 /** True for `{ a: 1 }`; false for `[1, 2]`, `null`, `'text'` and `42`. */
 function isKeyValueMap(value: unknown): value is Record<string, unknown> {
-  return Object.prototype.toString.call(value) === '[object Object]';
+  return typeof value === 'object' && value !== null && Array.isArray(value) === false;
 }
