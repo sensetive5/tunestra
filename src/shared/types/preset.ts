@@ -1,10 +1,6 @@
-import type { Agent, Exclude, McpConfig, Overrides } from '../../presets/schema.ts';
-
-/** Levels of a shared preset, from specific to general. */
-export type PresetLevel = 'team' | 'domain' | 'base';
-
-/** Every level of the chain; the project is the most specific one. */
-export type Level = 'project' | PresetLevel;
+import type { Exclude, McpConfig, Overrides } from '../../presets/schema.ts';
+import type { Agent } from '../constants/agents.ts';
+import type { Level } from '../constants/levels.ts';
 
 /** Paths in artifacts are relative to the preset's artifact directory. */
 export type Rule = {
@@ -61,7 +57,7 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
 } & TExtension;
 
 export type Project = Preset<
-  'project',
+  typeof Level.Project,
   {
     agents: Agent[];
   }

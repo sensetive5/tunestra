@@ -11,15 +11,8 @@ import {
   PROJECT_CONFIG,
   PROJECT_DIR,
 } from '../shared/constants/files.ts';
-import type {
-  Command,
-  McpServer,
-  Preset,
-  PresetLevel,
-  Project,
-  Rule,
-  Skill,
-} from '../shared/types/preset.ts';
+import { Level, type PresetLevel } from '../shared/constants/levels.ts';
+import type { Command, McpServer, Preset, Project, Rule, Skill } from '../shared/types/preset.ts';
 import { parseFrontmatter } from './frontmatter.ts';
 import {
   commandFrontmatterSchema,
@@ -73,7 +66,7 @@ export async function loadProject(dir: string): Promise<Project> {
   return {
     ...config,
     name,
-    level: 'project',
+    level: Level.Project,
     description: undefined,
     dir: root,
     artifactsDir,

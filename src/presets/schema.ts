@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { Agent } from '../shared/constants/agents.ts';
+import { PresetLevel } from '../shared/constants/levels.ts';
 
 const keys = z.array(z.string().min(1));
 const stringMap = z.record(z.string(), z.string());
@@ -37,7 +39,7 @@ export const overridesSchema = z.strictObject({
 
 export const presetManifestSchema = z.strictObject({
   name: z.string().min(1),
-  level: z.enum(['base', 'domain', 'team']),
+  level: z.enum(PresetLevel),
   description: z.string().optional(),
   extends: z.array(z.string().min(1)).default([]),
   exclude: excludeSchema.default({}),
@@ -47,10 +49,7 @@ export const presetManifestSchema = z.strictObject({
 export const projectConfigSchema = z.strictObject({
   name: z.string().min(1).optional(),
   extends: z.array(z.string().min(1)).default([]),
-  agents: z
-    .array(z.enum(['claude']))
-    .min(1)
-    .default(['claude']),
+  agents: z.array(z.enum(Agent)).min(1).default([Agent.Claude]),
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
 });
@@ -90,4 +89,3 @@ export type Exclude = z.infer<typeof excludeSchema>;
 export type Overrides = z.infer<typeof overridesSchema>;
 export type McpPatch = z.infer<typeof mcpPatchSchema>;
 export type McpConfig = Omit<z.infer<typeof mcpServerSchema>, 'description'>;
-export type Agent = z.infer<typeof projectConfigSchema>['agents'][number];
