@@ -15,9 +15,11 @@ async function listFiles(root: string, dir: string = root): Promise<string[]> {
   const files: string[] = [];
   for (const entry of entries) {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
+    const isDirectory = entry.isDirectory();
+    const isFile = entry.isFile();
+    if (isDirectory) {
       files.push(...(await listFiles(root, path)));
-    } else if (entry.isFile()) {
+    } else if (isFile) {
       files.push(relative(root, path));
     }
   }

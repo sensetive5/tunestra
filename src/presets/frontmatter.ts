@@ -23,17 +23,21 @@ export function parseFrontmatter(text: string, file: string): Frontmatter {
     return { data: {}, body: text };
   }
 
-  let data: unknown;
-  try {
-    data = parse(match[1] ?? '') ?? {};
-  } catch (error) {
-    throw new TunestraError(`Invalid frontmatter in ${file}: ${(error as Error).message}`);
-  }
-  if (isKeyValueMap(data)) {
+  const data = parseYaml(match[1] ?? '', file);
+  const isValid = isKeyValueMap(data);
+  if (isValid) {
     return { data, body: text.slice(match[0].length) };
   }
 
   throw new TunestraError(`Invalid frontmatter in ${file}: expected key-value pairs`);
+}
+
+function parseYaml(text: string, file: string): unknown {
+  try {
+    return parse(text) ?? {};
+  } catch (error) {
+    throw new TunestraError(`Invalid frontmatter in ${file}: ${(error as Error).message}`);
+  }
 }
 
 /** True for `{ a: 1 }`; false for `[1, 2]`, `null`, `'text'` and `42`. */

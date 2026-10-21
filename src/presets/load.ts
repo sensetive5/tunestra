@@ -88,7 +88,8 @@ export function instructionsKey(presetName: string): string {
 export async function loadPreset(dir: string): Promise<Preset> {
   const root = resolve(dir);
   const manifestPath = join(root, PRESET_MANIFEST);
-  if ((await exists(manifestPath)) === false) {
+  const hasManifest = await exists(manifestPath);
+  if (hasManifest === false) {
     throw new TunestraError(`${root} is not a preset: ${PRESET_MANIFEST} is missing`);
   }
   const manifest = await readYaml(manifestPath, presetManifestSchema, 'preset manifest');
@@ -105,7 +106,8 @@ export async function loadPreset(dir: string): Promise<Preset> {
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);
   const configPath = join(root, PROJECT_CONFIG);
-  if ((await exists(configPath)) === false) {
+  const hasConfig = await exists(configPath);
+  if (hasConfig === false) {
     throw new TunestraError(`${PROJECT_CONFIG} not found in ${root}. Run \`tunestra init\` first`);
   }
   const config = await readYaml(configPath, projectConfigSchema, 'project config');
@@ -139,7 +141,8 @@ async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
   const rules: Rule[] = [];
 
   const instructionsPath = join(dir, 'AGENTS.md');
-  if (await exists(instructionsPath)) {
+  const hasInstructions = await exists(instructionsPath);
+  if (hasInstructions) {
     rules.push({
       key: instructionsKey(presetName),
       source: 'AGENTS.md',
