@@ -13,7 +13,7 @@ const RENAMED: Record<string, string> = {
   _gitignore: '.gitignore',
 };
 
-async function listFiles(root: string, dir: string = root): Promise<string[]> {
+async function listFiles(root: string, dir: string = root): Promise<ReadonlyArray<string>> {
   const entries = await readdir(dir, { withFileTypes: true });
   const files: string[] = [];
 
@@ -39,7 +39,7 @@ function outputName(file: string): string {
   return RENAMED[file] ?? file;
 }
 
-function isGenerated(file: string, inputFiles: string[]): boolean {
+function isGenerated(file: string, inputFiles: ReadonlyArray<string>): boolean {
   const isInput = inputFiles.includes(file);
   const isState = file.startsWith(STATE_DIR);
 

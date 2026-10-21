@@ -247,7 +247,7 @@ function validate<T extends z.ZodType>(data: unknown, schema: T, what: string): 
 }
 
 /** Files matching the pattern, sorted so that the output does not depend on the file system. */
-async function list(dir: string, pattern: string): Promise<string[]> {
+async function list(dir: string, pattern: string): Promise<ReadonlyArray<string>> {
   const files = await glob(pattern, {
     cwd: dir,
     onlyFiles: true,
@@ -257,7 +257,7 @@ async function list(dir: string, pattern: string): Promise<string[]> {
 }
 
 /** Every file of a skill, dotfiles included: the skill is copied as a whole. */
-async function listSkillFiles(dir: string): Promise<string[]> {
+async function listSkillFiles(dir: string): Promise<ReadonlyArray<string>> {
   const files = await glob('**/*', {
     cwd: dir,
     dot: true,

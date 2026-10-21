@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Agent } from '../shared/constants/agents.ts';
 import { PresetLevel } from '../shared/constants/levels.ts';
 
-const keys = z.array(z.string().min(1));
+const keys = z.array(z.string().min(1)).readonly();
 const stringMap = z.record(z.string(), z.string());
 
 /**
@@ -27,7 +27,7 @@ export const excludeSchema = z.strictObject({
 
 export const mcpPatchSchema = z.strictObject({
   command: z.string().optional(),
-  args: z.array(z.string()).optional(),
+  args: z.array(z.string()).readonly().optional(),
   url: z.string().optional(),
   env: stringMap.optional(),
   headers: stringMap.optional(),
@@ -41,15 +41,15 @@ export const presetManifestSchema = z.strictObject({
   name: z.string().min(1),
   level: z.enum(PresetLevel),
   description: z.string().optional(),
-  extends: z.array(z.string().min(1)).default([]),
+  extends: z.array(z.string().min(1)).readonly().default([]),
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
 });
 
 export const projectConfigSchema = z.strictObject({
   name: z.string().min(1).optional(),
-  extends: z.array(z.string().min(1)).default([]),
-  agents: z.array(z.enum(Agent)).min(1).default([Agent.Claude]),
+  extends: z.array(z.string().min(1)).readonly().default([]),
+  agents: z.array(z.enum(Agent)).min(1).readonly().default([Agent.Claude]),
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
 });
@@ -59,7 +59,7 @@ export const mcpServerSchema = z
     description: z.string().optional(),
     type: z.enum(['stdio', 'http', 'sse']).optional(),
     command: z.string().optional(),
-    args: z.array(z.string()).optional(),
+    args: z.array(z.string()).readonly().optional(),
     env: stringMap.optional(),
     url: z.string().optional(),
     headers: stringMap.optional(),

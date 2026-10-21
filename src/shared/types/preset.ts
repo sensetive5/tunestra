@@ -17,7 +17,7 @@ export type Skill = {
   source: string;
   description: string;
   /** Every file of the skill, relative to its directory. */
-  files: string[];
+  files: ReadonlyArray<string>;
 };
 
 export type Command = {
@@ -47,18 +47,18 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
   dir: string;
   /** Directory with rules/, skills/, commands/ and mcp/. */
   artifactsDir: string;
-  extends: string[];
+  extends: ReadonlyArray<string>;
   exclude: Exclude;
   overrides: Overrides;
-  rules: Rule[];
-  skills: Skill[];
-  commands: Command[];
-  mcp: McpServer[];
+  rules: ReadonlyArray<Rule>;
+  skills: ReadonlyArray<Skill>;
+  commands: ReadonlyArray<Command>;
+  mcp: ReadonlyArray<McpServer>;
 } & TExtension;
 
 export type Project = Preset<
   typeof Level.Project,
   {
-    agents: Agent[];
+    agents: ReadonlyArray<Agent>;
   }
 >;
