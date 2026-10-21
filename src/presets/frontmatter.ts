@@ -20,14 +20,20 @@ export type Frontmatter = {
 export function parseFrontmatter(text: string, file: string): Frontmatter {
   const match = FRONTMATTER_PATTERN.exec(text);
   if (match === null) {
-    return { data: {}, body: text };
+    return {
+      data: {},
+      body: text,
+    };
   }
 
   const yaml = match.at(1) ?? '';
   const data = parseYaml(yaml, file);
   if (isKeyValueMap(data)) {
     const body = text.slice(match[0].length);
-    return { data, body };
+    return {
+      data,
+      body,
+    };
   }
 
   throw new TunestraError(`Invalid frontmatter in ${file}: expected key-value pairs`);

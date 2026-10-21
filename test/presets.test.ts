@@ -26,11 +26,17 @@ describe('parseFrontmatter', () => {
   });
 
   it('returns the whole text when there is no frontmatter', () => {
-    expect(parseFrontmatter('# Title\n', 'a.md')).toEqual({ data: {}, body: '# Title\n' });
+    expect(parseFrontmatter('# Title\n', 'a.md')).toEqual({
+      data: {},
+      body: '# Title\n',
+    });
   });
 
   it('accepts empty frontmatter', () => {
-    expect(parseFrontmatter('---\n---\nText', 'a.md')).toEqual({ data: {}, body: 'Text' });
+    expect(parseFrontmatter('---\n---\nText', 'a.md')).toEqual({
+      data: {},
+      body: 'Text',
+    });
   });
 
   it('rejects frontmatter that is not key-value pairs', () => {
@@ -103,7 +109,10 @@ describe('loadPreset', () => {
         config: {
           command: 'npx',
           args: ['-y', '<tracker_mcp_package>'],
-          env: { TRACKER_URL: 'https://tracker.example.com', QUEUE: 'COMMON' },
+          env: {
+            TRACKER_URL: 'https://tracker.example.com',
+            QUEUE: 'COMMON',
+          },
         },
       },
     ]);

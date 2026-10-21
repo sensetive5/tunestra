@@ -136,7 +136,12 @@ async function loadArtifacts(
   const commands = await loadCommands(dir);
   const mcp = await loadMcpServers(dir);
 
-  return { rules, skills, commands, mcp };
+  return {
+    rules,
+    skills,
+    commands,
+    mcp,
+  };
 }
 
 async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
@@ -147,7 +152,12 @@ async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
   if (hasInstructions) {
     const key = instructionsKey(presetName);
     const body = await readFile(instructionsPath, 'utf8');
-    rules.push({ key, source: 'AGENTS.md', description: undefined, body });
+    rules.push({
+      key,
+      source: 'AGENTS.md',
+      description: undefined,
+      body,
+    });
   }
 
   const sources = await list(dir, 'rules/*.md');
@@ -157,7 +167,12 @@ async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
     const { data, body } = parseFrontmatter(content, file);
     const frontmatter = validate(data, ruleFrontmatterSchema, `frontmatter in ${file}`);
     const key = basename(source, '.md');
-    rules.push({ key, source, description: frontmatter.description, body });
+    rules.push({
+      key,
+      source,
+      description: frontmatter.description,
+      body,
+    });
   }
 
   return rules;
@@ -187,7 +202,12 @@ async function loadSkills(dir: string): Promise<Skill[]> {
 
     const skillDir = join(dir, source);
     const files = await listSkillFiles(skillDir);
-    skills.push({ key, source, description: frontmatter.description, files });
+    skills.push({
+      key,
+      source,
+      description: frontmatter.description,
+      files,
+    });
   }
 
   return skills;
@@ -203,7 +223,12 @@ async function loadCommands(dir: string): Promise<Command[]> {
     const { data } = parseFrontmatter(content, file);
     const frontmatter = validate(data, commandFrontmatterSchema, `frontmatter in ${file}`);
     const key = basename(source, '.md');
-    commands.push({ key, source, description: frontmatter.description, content });
+    commands.push({
+      key,
+      source,
+      description: frontmatter.description,
+      content,
+    });
   }
 
   return commands;
@@ -217,7 +242,12 @@ async function loadMcpServers(dir: string): Promise<McpServer[]> {
     const file = join(dir, source);
     const { description, ...config } = await readYaml(file, mcpServerSchema, 'MCP server');
     const key = basename(source, '.yaml');
-    servers.push({ key, source, description, config });
+    servers.push({
+      key,
+      source,
+      description,
+      config,
+    });
   }
 
   return servers;
@@ -252,13 +282,20 @@ function validate<T extends z.ZodType>(data: unknown, schema: T, what: string): 
 
 /** Files matching the pattern, sorted so that the output does not depend on the file system. */
 async function list(dir: string, pattern: string): Promise<string[]> {
-  const files = await glob(pattern, { cwd: dir, onlyFiles: true });
+  const files = await glob(pattern, {
+    cwd: dir,
+    onlyFiles: true,
+  });
   return files.sort();
 }
 
 /** Every file of a skill, dotfiles included: the skill is copied as a whole. */
 async function listSkillFiles(dir: string): Promise<string[]> {
-  const files = await glob('**/*', { cwd: dir, dot: true, onlyFiles: true });
+  const files = await glob('**/*', {
+    cwd: dir,
+    dot: true,
+    onlyFiles: true,
+  });
   return files.sort();
 }
 
