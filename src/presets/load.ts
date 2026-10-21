@@ -78,10 +78,17 @@ async function loadArtifacts(
   dir: string,
   presetName: string,
 ): Promise<Pick<Preset, 'rules' | 'skills' | 'commands' | 'mcp'>> {
-  const rules = await loadRules(dir, presetName);
-  const skills = await loadSkills(dir);
-  const commands = await loadCommands(dir);
-  const mcp = await loadMcpServers(dir);
+  const rulesLoading = loadRules(dir, presetName);
+  const skillsLoading = loadSkills(dir);
+  const commandsLoading = loadCommands(dir);
+  const mcpLoading = loadMcpServers(dir);
+
+  const [rules, skills, commands, mcp] = await Promise.all([
+    rulesLoading,
+    skillsLoading,
+    commandsLoading,
+    mcpLoading,
+  ]);
 
   return {
     rules,
