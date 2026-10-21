@@ -91,8 +91,8 @@ async function loadArtifacts(
   };
 }
 
-async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
-  const rules: Rule[] = [];
+async function loadRules(dir: string, presetName: string): Promise<ReadonlyArray<Rule>> {
+  const rules: Array<Rule> = [];
 
   const instructionsPath = join(dir, INSTRUCTIONS_FILE);
   const hasInstructions = await exists(instructionsPath);
@@ -130,8 +130,8 @@ async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
   return rules;
 }
 
-async function loadSkills(dir: string): Promise<Skill[]> {
-  const skills: Skill[] = [];
+async function loadSkills(dir: string): Promise<ReadonlyArray<Skill>> {
+  const skills: Array<Skill> = [];
   const keys = new Map<string, string>();
 
   const manifests = await list(dir, 'skills/*/SKILL.md');
@@ -169,8 +169,8 @@ async function loadSkills(dir: string): Promise<Skill[]> {
   return skills;
 }
 
-async function loadCommands(dir: string): Promise<Command[]> {
-  const commands: Command[] = [];
+async function loadCommands(dir: string): Promise<ReadonlyArray<Command>> {
+  const commands: Array<Command> = [];
 
   const sources = await list(dir, 'commands/*.md');
 
@@ -193,8 +193,8 @@ async function loadCommands(dir: string): Promise<Command[]> {
   return commands;
 }
 
-async function loadMcpServers(dir: string): Promise<McpServer[]> {
-  const servers: McpServer[] = [];
+async function loadMcpServers(dir: string): Promise<ReadonlyArray<McpServer>> {
+  const servers: Array<McpServer> = [];
 
   const sources = await list(dir, 'mcp/*.yaml');
 

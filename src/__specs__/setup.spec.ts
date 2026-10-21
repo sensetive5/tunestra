@@ -15,7 +15,7 @@ const RENAMED: Record<string, string> = {
 
 async function listFiles(root: string, dir: string = root): Promise<ReadonlyArray<string>> {
   const entries = await readdir(dir, { withFileTypes: true });
-  const files: string[] = [];
+  const files: Array<string> = [];
 
   for (const entry of entries) {
     const path = join(dir, entry.name);
