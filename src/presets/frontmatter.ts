@@ -9,7 +9,7 @@ import { TunestraError } from '../errors.ts';
  * Matches:        "---\n---\nText"                       → group 1 = undefined
  * Does not match: "# Title\n---\nkey: value\n---"         (not at the start of the file)
  */
-const FRONTMATTER = /^---\r?\n(?:([\s\S]*?)\r?\n)?---(?:\r?\n|$)/;
+const FRONTMATTER_PATTERN = /^---\r?\n(?:([\s\S]*?)\r?\n)?---(?:\r?\n|$)/;
 
 export type Frontmatter = {
   data: Record<string, unknown>;
@@ -18,7 +18,7 @@ export type Frontmatter = {
 
 /** Splits a markdown file into YAML frontmatter and body. A file without frontmatter has empty data. */
 export function parseFrontmatter(text: string, file: string): Frontmatter {
-  const match = FRONTMATTER.exec(text);
+  const match = FRONTMATTER_PATTERN.exec(text);
   if (!match) {
     return { data: {}, body: text };
   }

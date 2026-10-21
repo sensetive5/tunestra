@@ -9,9 +9,11 @@ const stringMap = z.record(z.string(), z.string());
  * Valid:   "code-review", "storybook", "v2"
  * Invalid: "Code-Review" (uppercase), "code--review" or "-review" (wrong hyphens), "../../etc"
  */
+const SKILL_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 export const skillName = z
   .string()
-  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lowercase letters, digits and single hyphens')
+  .regex(SKILL_NAME_PATTERN, 'Use lowercase letters, digits and single hyphens')
   .max(64);
 
 export const excludeSchema = z.strictObject({
