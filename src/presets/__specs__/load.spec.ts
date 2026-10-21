@@ -159,6 +159,28 @@ describe('loadPreset', () => {
     await expect(result).rejects.toThrow('the same name "same"');
   });
 
+  it('reports every problem at once, in the order of the files', async () => {
+    const dir = await createTree({
+      'tunestra.preset.yaml': MINIMAL_MANIFEST,
+      'rules/b.md': '---\n- list\n---\n',
+      'rules/a.md': '---\ndescription: [\n---\n',
+      'skills/s/SKILL.md': '---\nname: s\n---\n',
+      'mcp/m.yaml': 'description: Nothing to run\n',
+    });
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('Found 4 problems');
+    await expect(result).rejects.toMatchObject({
+      problems: [
+        expect.stringContaining('rules/a.md'),
+        expect.stringContaining('rules/b.md'),
+        expect.stringContaining('SKILL.md'),
+        expect.stringContaining('mcp/m.yaml'),
+      ],
+    });
+  });
+
   it('requires either command or url for MCP servers', async () => {
     const dir = await createTree({
       'tunestra.preset.yaml': MINIMAL_MANIFEST,

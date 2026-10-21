@@ -4,7 +4,7 @@ import { glob } from 'tinyglobby';
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { prettifyError } from 'zod';
-import { TunestraError } from '../errors.ts';
+import { createProblemsError, TunestraError } from '../errors.ts';
 import {
   INSTRUCTIONS_FILE,
   PRESET_MANIFEST,
@@ -83,12 +83,13 @@ async function loadArtifacts(
   const commandsLoading = loadCommands(dir);
   const mcpLoading = loadMcpServers(dir);
 
-  const [rules, skills, commands, mcp] = await Promise.all([
+  const results = await Promise.allSettled([
     rulesLoading,
     skillsLoading,
     commandsLoading,
     mcpLoading,
   ]);
+  const [rules, skills, commands, mcp] = collectResults(results);
 
   return {
     rules,
@@ -99,127 +100,192 @@ async function loadArtifacts(
 }
 
 async function loadRules(dir: string, presetName: string): Promise<ReadonlyArray<Rule>> {
-  const rules: Array<Rule> = [];
-
-  const instructionsPath = join(dir, INSTRUCTIONS_FILE);
-  const hasInstructions = await checkExists(instructionsPath);
-
-  if (hasInstructions) {
-    const key = buildInstructionsKey(presetName);
-    const body = await readFile(instructionsPath, 'utf8');
-
-    rules.push({
-      key,
-      source: INSTRUCTIONS_FILE,
-      description: undefined,
-      body,
-    });
-  }
-
+  const instructionsLoading = loadInstructions(dir, presetName);
   const sources = await list(dir, 'rules/*.md');
+  const ruleLoadings = sources.map((source) => loadRule(dir, source));
 
-  for (const source of sources) {
-    const file = join(dir, source);
-    const content = await readFile(file, 'utf8');
-    const { data, body } = parseFrontmatter(content, file);
-    const frontmatter = validate(data, ruleFrontmatterSchema, `frontmatter in ${file}`);
+  const loadings = [instructionsLoading, ...ruleLoadings];
 
-    const key = basename(source, '.md');
+  const results = await Promise.allSettled(loadings);
+  const rules = collectResults(results);
 
-    rules.push({
-      key,
-      source,
-      description: frontmatter.description,
-      body,
-    });
+  return rules.filter(isRule);
+}
+
+async function loadInstructions(dir: string, presetName: string): Promise<Rule | undefined> {
+  const file = join(dir, INSTRUCTIONS_FILE);
+  const hasInstructions = await checkExists(file);
+
+  if (hasInstructions === false) {
+    return undefined;
   }
 
-  return rules;
+  const key = buildInstructionsKey(presetName);
+  const body = await readFile(file, 'utf8');
+
+  return {
+    key,
+    source: INSTRUCTIONS_FILE,
+    description: undefined,
+    body,
+  };
+}
+
+async function loadRule(dir: string, source: string): Promise<Rule> {
+  const file = join(dir, source);
+  const content = await readFile(file, 'utf8');
+  const { data, body } = parseFrontmatter(content, file);
+  const frontmatter = validate(data, ruleFrontmatterSchema, `frontmatter in ${file}`);
+
+  const key = basename(source, '.md');
+
+  return {
+    key,
+    source,
+    description: frontmatter.description,
+    body,
+  };
 }
 
 async function loadSkills(dir: string): Promise<ReadonlyArray<Skill>> {
-  const skills: Array<Skill> = [];
-  const keys = new Map<string, string>();
-
   const manifests = await list(dir, 'skills/*/SKILL.md');
+  const skillLoadings = manifests.map((manifest) => loadSkill(dir, manifest));
 
-  for (const manifest of manifests) {
-    const file = join(dir, manifest);
-    const source = dirname(manifest);
-    const content = await readFile(file, 'utf8');
-    const { data } = parseFrontmatter(content, file);
-    const frontmatter = validate(data, skillFrontmatterSchema, `frontmatter in ${file}`);
+  const results = await Promise.allSettled(skillLoadings);
+  const skills = collectResults(results);
+  const problems = findDuplicateSkills(skills, dir);
 
-    const folderName = basename(source);
-    const key = frontmatter.name ?? validate(folderName, skillName, `skill folder ${source}`);
-    const duplicate = keys.get(key);
-
-    if (typeof duplicate === 'string') {
-      throw new TunestraError(
-        `Skills ${duplicate} and ${source} in ${dir} have the same name "${key}"`,
-      );
-    }
-
-    keys.set(key, source);
-
-    const skillDir = join(dir, source);
-    const files = await listSkillFiles(skillDir);
-
-    skills.push({
-      key,
-      source,
-      description: frontmatter.description,
-      files,
-    });
+  if (problems.length > 0) {
+    throw createProblemsError(problems);
   }
 
   return skills;
 }
 
-async function loadCommands(dir: string): Promise<ReadonlyArray<Command>> {
-  const commands: Array<Command> = [];
+async function loadSkill(dir: string, manifest: string): Promise<Skill> {
+  const file = join(dir, manifest);
+  const source = dirname(manifest);
+  const content = await readFile(file, 'utf8');
+  const { data } = parseFrontmatter(content, file);
+  const frontmatter = validate(data, skillFrontmatterSchema, `frontmatter in ${file}`);
 
-  const sources = await list(dir, 'commands/*.md');
+  const folderName = basename(source);
+  const key = frontmatter.name ?? validate(folderName, skillName, `skill folder ${source}`);
 
-  for (const source of sources) {
-    const file = join(dir, source);
-    const content = await readFile(file, 'utf8');
-    const { data } = parseFrontmatter(content, file);
-    const frontmatter = validate(data, commandFrontmatterSchema, `frontmatter in ${file}`);
+  const skillDir = join(dir, source);
+  const files = await listSkillFiles(skillDir);
 
-    const key = basename(source, '.md');
+  return {
+    key,
+    source,
+    description: frontmatter.description,
+    files,
+  };
+}
 
-    commands.push({
-      key,
-      source,
-      description: frontmatter.description,
-      content,
-    });
+function findDuplicateSkills(skills: ReadonlyArray<Skill>, dir: string): ReadonlyArray<string> {
+  const sources = new Map<string, string>();
+  const problems: Array<string> = [];
+
+  for (const skill of skills) {
+    const duplicate = sources.get(skill.key);
+
+    if (typeof duplicate === 'string') {
+      problems.push(
+        `Skills ${duplicate} and ${skill.source} in ${dir} have the same name "${skill.key}"`,
+      );
+    }
+
+    sources.set(skill.key, skill.source);
   }
 
-  return commands;
+  return problems;
+}
+
+async function loadCommands(dir: string): Promise<ReadonlyArray<Command>> {
+  const sources = await list(dir, 'commands/*.md');
+  const commandLoadings = sources.map((source) => loadCommand(dir, source));
+
+  const results = await Promise.allSettled(commandLoadings);
+
+  return collectResults(results);
+}
+
+async function loadCommand(dir: string, source: string): Promise<Command> {
+  const file = join(dir, source);
+  const content = await readFile(file, 'utf8');
+  const { data } = parseFrontmatter(content, file);
+  const frontmatter = validate(data, commandFrontmatterSchema, `frontmatter in ${file}`);
+
+  const key = basename(source, '.md');
+
+  return {
+    key,
+    source,
+    description: frontmatter.description,
+    content,
+  };
 }
 
 async function loadMcpServers(dir: string): Promise<ReadonlyArray<McpServer>> {
-  const servers: Array<McpServer> = [];
-
   const sources = await list(dir, 'mcp/*.yaml');
+  const serverLoadings = sources.map((source) => loadMcpServer(dir, source));
 
-  for (const source of sources) {
-    const file = join(dir, source);
-    const { description, ...config } = await readYaml(file, mcpServerSchema, 'MCP server');
+  const results = await Promise.allSettled(serverLoadings);
 
-    const key = basename(source, '.yaml');
+  return collectResults(results);
+}
 
-    servers.push({
-      key,
-      source,
-      description,
-      config,
-    });
+async function loadMcpServer(dir: string, source: string): Promise<McpServer> {
+  const file = join(dir, source);
+  const { description, ...config } = await readYaml(file, mcpServerSchema, 'MCP server');
+
+  const key = basename(source, '.yaml');
+
+  return {
+    key,
+    source,
+    description,
+    config,
+  };
+}
+
+/**
+ * Returns the values in the order of the results, or throws one error with every problem.
+ * Problems keep the same order, so the message does not depend on which file loads first.
+ * Errors that are not caused by the user's input are thrown as is.
+ */
+function collectResults<T extends ReadonlyArray<unknown>>(
+  results: { [K in keyof T]: PromiseSettledResult<T[K]> },
+): T {
+  const values: Array<unknown> = [];
+  const problems: Array<string> = [];
+
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      values.push(result.value);
+      continue;
+    }
+
+    const reason: unknown = result.reason;
+
+    if (reason instanceof TunestraError) {
+      problems.push(...reason.problems);
+      continue;
+    }
+
+    throw reason;
   }
 
-  return servers;
+  if (problems.length > 0) {
+    throw createProblemsError(problems);
+  }
+
+  return values as unknown as T;
+}
+
+function isRule(value: Rule | undefined): value is Rule {
+  return typeof value === 'object';
 }
 
 async function readYaml<T extends z.ZodType>(
