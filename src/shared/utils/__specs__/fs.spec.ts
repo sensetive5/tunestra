@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { createTempDir } from '../../../__specs__/helpers/temp.ts';
+import { createTempDir } from '../../tests/temp.ts';
 import { checkExists } from '../fs.ts';
 
 describe('checkExists', () => {

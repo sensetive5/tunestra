@@ -3,8 +3,8 @@ import { cp, readdir, readFile, readlink } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { FIXTURES_DIR } from './helpers/fixtures.ts';
-import { createTempDir } from './helpers/temp.ts';
+import { FIXTURES_DIR } from '../shared/tests/fixtures.ts';
+import { createTempDir } from '../shared/tests/temp.ts';
 
 const CLI = resolve('src/cli/index.ts');
 const STATE_DIR = '.tunestra/state/';

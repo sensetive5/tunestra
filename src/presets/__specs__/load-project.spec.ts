@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BASIC_INPUT } from '../../__specs__/helpers/fixtures.ts';
-import { createTree } from '../../__specs__/helpers/temp.ts';
+import { BASIC_INPUT } from '../../shared/tests/fixtures.ts';
+import { createTree } from '../../shared/tests/temp.ts';
 import { loadProject } from '../load-project.ts';
 
 describe('loadProject', () => {
