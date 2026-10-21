@@ -11,7 +11,15 @@ import {
   PROJECT_CONFIG,
   PROJECT_DIR,
 } from '../shared/constants/files.ts';
-import type { Command, McpServer, Preset, Project, Rule, Skill } from '../shared/types/preset.ts';
+import type {
+  Command,
+  McpServer,
+  Preset,
+  PresetLevel,
+  Project,
+  Rule,
+  Skill,
+} from '../shared/types/preset.ts';
 import { parseFrontmatter } from './frontmatter.ts';
 import {
   commandFrontmatterSchema,
@@ -27,7 +35,7 @@ export function instructionsKey(presetName: string): string {
   return `instructions@${presetName}`;
 }
 
-export async function loadPreset(dir: string): Promise<Preset> {
+export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
   const root = resolve(dir);
   const manifestPath = join(root, PRESET_MANIFEST);
   const hasManifest = await exists(manifestPath);

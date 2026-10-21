@@ -1,6 +1,10 @@
 import type { Agent, Exclude, McpConfig, Overrides } from '../../presets/schema.ts';
 
-export type Level = 'project' | 'domain' | 'team' | 'base';
+/** Levels of a shared preset, from specific to general. */
+export type PresetLevel = 'team' | 'domain' | 'base';
+
+/** Every level of the chain; the project is the most specific one. */
+export type Level = 'project' | PresetLevel;
 
 /** Paths in artifacts are relative to the preset's artifact directory. */
 export type Rule = {
@@ -35,9 +39,13 @@ export type McpServer = {
   config: McpConfig;
 };
 
-export type Preset = {
+/**
+ * A level of the chain. `TLevel` narrows the level; `TExtension` adds the fields that only
+ * this kind of level has.
+ */
+export type Preset<TLevel extends Level = Level, TExtension extends object = object> = {
   name: string;
-  level: Level;
+  level: TLevel;
   description: string | undefined;
   /** Directory of the manifest; `extends` is resolved against it. */
   dir: string;
@@ -50,9 +58,11 @@ export type Preset = {
   skills: Skill[];
   commands: Command[];
   mcp: McpServer[];
-};
+} & TExtension;
 
-export type Project = Preset & {
-  level: 'project';
-  agents: Agent[];
-};
+export type Project = Preset<
+  'project',
+  {
+    agents: Agent[];
+  }
+>;
