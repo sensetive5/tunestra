@@ -24,8 +24,7 @@ export function parseFrontmatter(text: string, file: string): Frontmatter {
   }
 
   const data = parseYaml(match[1] ?? '', file);
-  const isValid = isKeyValueMap(data);
-  if (isValid) {
+  if (isKeyValueMap(data)) {
     return { data, body: text.slice(match[0].length) };
   }
 
