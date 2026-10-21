@@ -19,7 +19,7 @@ export type Frontmatter = {
 /** Splits a markdown file into YAML frontmatter and body. A file without frontmatter has empty data. */
 export function parseFrontmatter(text: string, file: string): Frontmatter {
   const match = FRONTMATTER_PATTERN.exec(text);
-  if (!match) {
+  if (match === null) {
     return { data: {}, body: text };
   }
 
@@ -29,9 +29,14 @@ export function parseFrontmatter(text: string, file: string): Frontmatter {
   } catch (error) {
     throw new TunestraError(`Invalid frontmatter in ${file}: ${(error as Error).message}`);
   }
-  if (typeof data !== 'object' || Array.isArray(data)) {
-    throw new TunestraError(`Invalid frontmatter in ${file}: expected key-value pairs`);
+  if (isKeyValueMap(data)) {
+    return { data, body: text.slice(match[0].length) };
   }
 
-  return { data: data as Record<string, unknown>, body: text.slice(match[0].length) };
+  throw new TunestraError(`Invalid frontmatter in ${file}: expected key-value pairs`);
+}
+
+/** True for `{ a: 1 }`; false for `[1, 2]`, `null`, `'text'` and `42`. */
+function isKeyValueMap(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === '[object Object]';
 }

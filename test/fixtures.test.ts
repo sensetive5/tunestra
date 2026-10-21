@@ -37,7 +37,7 @@ async function runFixture(name: string): Promise<void> {
     (file) => RENAMED[file] ?? file,
   );
   const generatedFiles = (await listFiles(project)).filter(
-    (file) => !inputFiles.includes(file) && !file.startsWith('.tunestra/state/'),
+    (file) => inputFiles.includes(file) === false && file.startsWith('.tunestra/state/') === false,
   );
   expect(generatedFiles).toEqual(expectedFiles.sort());
 

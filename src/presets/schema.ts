@@ -65,9 +65,13 @@ export const mcpServerSchema = z
     url: z.string().optional(),
     headers: stringMap.optional(),
   })
-  .refine((server) => (server.command === undefined) !== (server.url === undefined), {
+  .refine((server) => [server.command, server.url].filter(isString).length === 1, {
     message: 'Set either "command" (local server) or "url" (remote server)',
   });
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
 
 export const ruleFrontmatterSchema = z.looseObject({
   description: z.string().optional(),

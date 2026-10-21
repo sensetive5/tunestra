@@ -88,7 +88,7 @@ export function instructionsKey(presetName: string): string {
 export async function loadPreset(dir: string): Promise<Preset> {
   const root = resolve(dir);
   const manifestPath = join(root, PRESET_MANIFEST);
-  if (!(await exists(manifestPath))) {
+  if ((await exists(manifestPath)) === false) {
     throw new TunestraError(`${root} is not a preset: ${PRESET_MANIFEST} is missing`);
   }
   const manifest = await readYaml(manifestPath, presetManifestSchema, 'preset manifest');
@@ -105,7 +105,7 @@ export async function loadPreset(dir: string): Promise<Preset> {
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);
   const configPath = join(root, PROJECT_CONFIG);
-  if (!(await exists(configPath))) {
+  if ((await exists(configPath)) === false) {
     throw new TunestraError(`${PROJECT_CONFIG} not found in ${root}. Run \`tunestra init\` first`);
   }
   const config = await readYaml(configPath, projectConfigSchema, 'project config');
@@ -175,7 +175,7 @@ async function loadSkills(dir: string): Promise<Skill[]> {
     const key = frontmatter.name ?? validate(basename(source), skillName, `skill folder ${source}`);
 
     const duplicate = keys.get(key);
-    if (duplicate) {
+    if (typeof duplicate === 'string') {
       throw new TunestraError(
         `Skills ${duplicate} and ${source} in ${dir} have the same name "${key}"`,
       );
@@ -245,10 +245,10 @@ async function readYaml<T extends z.ZodType>(
 
 function validate<T extends z.ZodType>(data: unknown, schema: T, what: string): z.output<T> {
   const result = schema.safeParse(data);
-  if (!result.success) {
-    throw new TunestraError(`Invalid ${what}:\n${prettifyError(result.error)}`);
+  if (result.success) {
+    return result.data;
   }
-  return result.data;
+  throw new TunestraError(`Invalid ${what}:\n${prettifyError(result.error)}`);
 }
 
 /** Files matching the pattern, sorted so that the output does not depend on the file system. */
