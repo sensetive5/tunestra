@@ -13,6 +13,7 @@ import {
 } from '../shared/constants/files.ts';
 import { Level, type PresetLevel } from '../shared/constants/levels.ts';
 import type { Command, McpServer, Preset, Project, Rule, Skill } from '../shared/types/preset.ts';
+import { buildResultsError, getValues, isEveryFulfilled } from '../shared/utils/settled.ts';
 import { parseFrontmatter } from './frontmatter.ts';
 import {
   commandFrontmatterSchema,
@@ -89,14 +90,19 @@ async function loadArtifacts(
     commandsLoading,
     mcpLoading,
   ]);
-  const [rules, skills, commands, mcp] = collectResults(results);
 
-  return {
-    rules,
-    skills,
-    commands,
-    mcp,
-  };
+  if (isEveryFulfilled(results)) {
+    const [rulesResult, skillsResult, commandsResult, mcpResult] = results;
+
+    return {
+      rules: rulesResult.value,
+      skills: skillsResult.value,
+      commands: commandsResult.value,
+      mcp: mcpResult.value,
+    };
+  }
+
+  throw buildResultsError(results);
 }
 
 async function loadRules(dir: string, presetName: string): Promise<ReadonlyArray<Rule>> {
@@ -107,9 +113,14 @@ async function loadRules(dir: string, presetName: string): Promise<ReadonlyArray
   const loadings = [instructionsLoading, ...ruleLoadings];
 
   const results = await Promise.allSettled(loadings);
-  const rules = collectResults(results);
 
-  return rules.filter(isRule);
+  if (isEveryFulfilled(results)) {
+    const rules = getValues(results);
+
+    return rules.filter(isRule);
+  }
+
+  throw buildResultsError(results);
 }
 
 async function loadInstructions(dir: string, presetName: string): Promise<Rule | undefined> {
@@ -152,7 +163,12 @@ async function loadSkills(dir: string): Promise<ReadonlyArray<Skill>> {
   const skillLoadings = manifests.map((manifest) => loadSkill(dir, manifest));
 
   const results = await Promise.allSettled(skillLoadings);
-  const skills = collectResults(results);
+
+  if (isEveryFulfilled(results) === false) {
+    throw buildResultsError(results);
+  }
+
+  const skills = getValues(results);
   const problems = findDuplicateSkills(skills, dir);
 
   if (problems.length > 0) {
@@ -208,7 +224,11 @@ async function loadCommands(dir: string): Promise<ReadonlyArray<Command>> {
 
   const results = await Promise.allSettled(commandLoadings);
 
-  return collectResults(results);
+  if (isEveryFulfilled(results)) {
+    return getValues(results);
+  }
+
+  throw buildResultsError(results);
 }
 
 async function loadCommand(dir: string, source: string): Promise<Command> {
@@ -233,7 +253,11 @@ async function loadMcpServers(dir: string): Promise<ReadonlyArray<McpServer>> {
 
   const results = await Promise.allSettled(serverLoadings);
 
-  return collectResults(results);
+  if (isEveryFulfilled(results)) {
+    return getValues(results);
+  }
+
+  throw buildResultsError(results);
 }
 
 async function loadMcpServer(dir: string, source: string): Promise<McpServer> {
@@ -248,40 +272,6 @@ async function loadMcpServer(dir: string, source: string): Promise<McpServer> {
     description,
     config,
   };
-}
-
-/**
- * Returns the values in the order of the results, or throws one error with every problem.
- * Problems keep the same order, so the message does not depend on which file loads first.
- * Errors that are not caused by the user's input are thrown as is.
- */
-function collectResults<T extends ReadonlyArray<unknown>>(
-  results: { [K in keyof T]: PromiseSettledResult<T[K]> },
-): T {
-  const values: Array<unknown> = [];
-  const problems: Array<string> = [];
-
-  for (const result of results) {
-    if (result.status === 'fulfilled') {
-      values.push(result.value);
-      continue;
-    }
-
-    const reason: unknown = result.reason;
-
-    if (reason instanceof TunestraError) {
-      problems.push(...reason.problems);
-      continue;
-    }
-
-    throw reason;
-  }
-
-  if (problems.length > 0) {
-    throw createProblemsError(problems);
-  }
-
-  return values as unknown as T;
 }
 
 function isRule(value: Rule | undefined): value is Rule {
