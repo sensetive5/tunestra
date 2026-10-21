@@ -5,7 +5,7 @@ import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const CLI = resolve('src/cli/index.ts');
-const FIXTURES = resolve('test/fixtures');
+const FIXTURES = resolve('src/__specs__/fixtures');
 const STATE_DIR = '.tunestra/state/';
 
 // Files that stand for dotfiles which cannot be stored in the fixture as is.

@@ -2,10 +2,9 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseFrontmatter } from '../src/presets/frontmatter.ts';
-import { loadPreset, loadProject } from '../src/presets/load.ts';
+import { loadPreset, loadProject } from '../load.ts';
 
-const BASIC = resolve('test/fixtures/basic/input');
+const BASIC = resolve('src/__specs__/fixtures/basic/input');
 const MINIMAL_MANIFEST = 'name: x\nlevel: team\n';
 
 /** Creates a temporary directory with the given files. */
@@ -23,59 +22,6 @@ async function tree(files: Record<string, string>): Promise<string> {
 
   return root;
 }
-
-describe('parseFrontmatter', () => {
-  it('splits frontmatter and body', () => {
-    const text = '---\ndescription: Hi\n---\n# Title\n';
-
-    const result = parseFrontmatter(text, 'a.md');
-
-    expect(result).toEqual({
-      data: {
-        description: 'Hi',
-      },
-      body: '# Title\n',
-    });
-  });
-
-  it('returns the whole text when there is no frontmatter', () => {
-    const text = '# Title\n';
-
-    const result = parseFrontmatter(text, 'a.md');
-
-    expect(result).toEqual({
-      data: {},
-      body: '# Title\n',
-    });
-  });
-
-  it('accepts empty frontmatter', () => {
-    const text = '---\n---\nText';
-
-    const result = parseFrontmatter(text, 'a.md');
-
-    expect(result).toEqual({
-      data: {},
-      body: 'Text',
-    });
-  });
-
-  it('rejects frontmatter that is not key-value pairs', () => {
-    const text = '---\n- a\n- b\n---\n';
-
-    const act = () => parseFrontmatter(text, 'a.md');
-
-    expect(act).toThrow('key-value pairs');
-  });
-
-  it('names the file when YAML is broken', () => {
-    const text = '---\nkey: [\n---\n';
-
-    const act = () => parseFrontmatter(text, 'a.md');
-
-    expect(act).toThrow('a.md');
-  });
-});
 
 describe('loadPreset', () => {
   it('reads the manifest and every kind of artifact', async () => {

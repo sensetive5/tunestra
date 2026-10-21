@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import pkg from '../package.json' with { type: 'json' };
+import pkg from '../../../package.json' with { type: 'json' };
 
 describe('cli', () => {
   it('prints the version from package.json', () => {
