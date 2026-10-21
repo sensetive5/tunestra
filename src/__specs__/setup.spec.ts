@@ -35,7 +35,7 @@ async function listFiles(root: string, dir: string = root): Promise<ReadonlyArra
 }
 
 /** The path where tunestra writes a file that the fixture stores under another name. */
-function outputName(file: string): string {
+function resolveOutputName(file: string): string {
   return RENAMED[file] ?? file;
 }
 
@@ -62,14 +62,14 @@ async function runFixture(name: string): Promise<void> {
   execFileSync(process.execPath, [CLI, 'setup'], { cwd: project });
 
   const expectedFiles = await listFiles(expectedDir);
-  const expectedOutput = expectedFiles.map(outputName).sort();
+  const expectedOutput = expectedFiles.map(resolveOutputName).sort();
   const projectFiles = await listFiles(project);
   const generatedFiles = projectFiles.filter((file) => isGenerated(file, inputFiles));
 
   expect(generatedFiles).toEqual(expectedOutput);
 
   for (const file of expectedFiles) {
-    const outputFile = outputName(file);
+    const outputFile = resolveOutputName(file);
     const expectedPath = join(expectedDir, file);
     const actualPath = join(project, outputFile);
     const expected = await readFile(expectedPath, 'utf8');

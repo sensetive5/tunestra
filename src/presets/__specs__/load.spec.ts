@@ -8,7 +8,7 @@ const BASIC = resolve('src/__specs__/fixtures/basic/input');
 const MINIMAL_MANIFEST = 'name: x\nlevel: team\n';
 
 /** Creates a temporary directory with the given files. */
-async function tree(files: Record<string, string>): Promise<string> {
+async function createTree(files: Record<string, string>): Promise<string> {
   const tempPrefix = join(tmpdir(), 'tunestra-presets-');
   const root = await mkdtemp(tempPrefix);
 
@@ -105,7 +105,7 @@ describe('loadPreset', () => {
   });
 
   it('fails when the manifest is missing', async () => {
-    const dir = await tree({
+    const dir = await createTree({
       'rules/a.md': 'A',
     });
 
@@ -115,7 +115,7 @@ describe('loadPreset', () => {
   });
 
   it('rejects unknown fields and wrong levels', async () => {
-    const dir = await tree({
+    const dir = await createTree({
       'tunestra.preset.yaml': 'name: x\nlevel: project\nextend: [../base]\n',
     });
 
@@ -126,7 +126,7 @@ describe('loadPreset', () => {
   });
 
   it('requires a description for skills', async () => {
-    const dir = await tree({
+    const dir = await createTree({
       'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'skills/a/SKILL.md': '---\nname: a\n---\nText',
     });
@@ -137,7 +137,7 @@ describe('loadPreset', () => {
   });
 
   it('rejects skill names that are not safe directory names', async () => {
-    const dir = await tree({
+    const dir = await createTree({
       'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'skills/a/SKILL.md': '---\nname: ../../etc\ndescription: Bad\n---\n',
     });
@@ -148,7 +148,7 @@ describe('loadPreset', () => {
   });
 
   it('rejects two skills with the same name', async () => {
-    const dir = await tree({
+    const dir = await createTree({
       'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'skills/a/SKILL.md': '---\nname: same\ndescription: A\n---\n',
       'skills/b/SKILL.md': '---\nname: same\ndescription: B\n---\n',
@@ -160,7 +160,7 @@ describe('loadPreset', () => {
   });
 
   it('requires either command or url for MCP servers', async () => {
-    const dir = await tree({
+    const dir = await createTree({
       'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'mcp/a.yaml': 'description: Nothing to run\n',
     });
@@ -193,7 +193,7 @@ describe('loadProject', () => {
   });
 
   it('uses defaults for an empty config', async () => {
-    const root = await tree({
+    const root = await createTree({
       'my-service/tunestra.yaml': '',
     });
     const dir = join(root, 'my-service');
@@ -212,7 +212,7 @@ describe('loadProject', () => {
   });
 
   it('suggests init when tunestra.yaml is missing', async () => {
-    const dir = await tree({});
+    const dir = await createTree({});
 
     const result = loadProject(dir);
 

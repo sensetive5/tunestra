@@ -24,14 +24,14 @@ import {
   skillName,
 } from './schema.ts';
 
-export function instructionsKey(presetName: string): string {
+export function buildInstructionsKey(presetName: string): string {
   return `instructions@${presetName}`;
 }
 
 export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
   const root = resolve(dir);
   const manifestPath = join(root, PRESET_MANIFEST);
-  const hasManifest = await exists(manifestPath);
+  const hasManifest = await checkExists(manifestPath);
 
   if (hasManifest === false) {
     throw new TunestraError(`${root} is not a preset: ${PRESET_MANIFEST} is missing`);
@@ -52,7 +52,7 @@ export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);
   const configPath = join(root, PROJECT_CONFIG);
-  const hasConfig = await exists(configPath);
+  const hasConfig = await checkExists(configPath);
 
   if (hasConfig === false) {
     throw new TunestraError(`${PROJECT_CONFIG} not found in ${root}. Run \`tunestra init\` first`);
@@ -95,10 +95,10 @@ async function loadRules(dir: string, presetName: string): Promise<ReadonlyArray
   const rules: Array<Rule> = [];
 
   const instructionsPath = join(dir, INSTRUCTIONS_FILE);
-  const hasInstructions = await exists(instructionsPath);
+  const hasInstructions = await checkExists(instructionsPath);
 
   if (hasInstructions) {
-    const key = instructionsKey(presetName);
+    const key = buildInstructionsKey(presetName);
     const body = await readFile(instructionsPath, 'utf8');
 
     rules.push({
@@ -267,7 +267,7 @@ async function listSkillFiles(dir: string): Promise<ReadonlyArray<string>> {
   return files.sort();
 }
 
-async function exists(path: string): Promise<boolean> {
+async function checkExists(path: string): Promise<boolean> {
   return stat(path).then(
     () => true,
     () => false,
