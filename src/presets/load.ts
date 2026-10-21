@@ -93,13 +93,14 @@ export async function loadPreset(dir: string): Promise<Preset> {
     throw new TunestraError(`${root} is not a preset: ${PRESET_MANIFEST} is missing`);
   }
   const manifest = await readYaml(manifestPath, presetManifestSchema, 'preset manifest');
+  const artifacts = await loadArtifacts(root, manifest.name);
 
   return {
     ...manifest,
     description: manifest.description,
     dir: root,
     artifactsDir: root,
-    ...(await loadArtifacts(root, manifest.name)),
+    ...artifacts,
   };
 }
 
@@ -113,6 +114,7 @@ export async function loadProject(dir: string): Promise<Project> {
   const config = await readYaml(configPath, projectConfigSchema, 'project config');
   const name = config.name ?? basename(root);
   const artifactsDir = join(root, PROJECT_DIR);
+  const artifacts = await loadArtifacts(artifactsDir, name);
 
   return {
     ...config,
@@ -121,7 +123,7 @@ export async function loadProject(dir: string): Promise<Project> {
     description: undefined,
     dir: root,
     artifactsDir,
-    ...(await loadArtifacts(artifactsDir, name)),
+    ...artifacts,
   };
 }
 
@@ -129,12 +131,12 @@ async function loadArtifacts(
   dir: string,
   presetName: string,
 ): Promise<Pick<Preset, 'rules' | 'skills' | 'commands' | 'mcp'>> {
-  return {
-    rules: await loadRules(dir, presetName),
-    skills: await loadSkills(dir),
-    commands: await loadCommands(dir),
-    mcp: await loadMcpServers(dir),
-  };
+  const rules = await loadRules(dir, presetName);
+  const skills = await loadSkills(dir);
+  const commands = await loadCommands(dir);
+  const mcp = await loadMcpServers(dir);
+
+  return { rules, skills, commands, mcp };
 }
 
 async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
@@ -143,24 +145,19 @@ async function loadRules(dir: string, presetName: string): Promise<Rule[]> {
   const instructionsPath = join(dir, 'AGENTS.md');
   const hasInstructions = await exists(instructionsPath);
   if (hasInstructions) {
-    rules.push({
-      key: instructionsKey(presetName),
-      source: 'AGENTS.md',
-      description: undefined,
-      body: await readFile(instructionsPath, 'utf8'),
-    });
+    const key = instructionsKey(presetName);
+    const body = await readFile(instructionsPath, 'utf8');
+    rules.push({ key, source: 'AGENTS.md', description: undefined, body });
   }
 
-  for (const source of await list(dir, 'rules/*.md')) {
+  const sources = await list(dir, 'rules/*.md');
+  for (const source of sources) {
     const file = join(dir, source);
-    const { data, body } = parseFrontmatter(await readFile(file, 'utf8'), file);
+    const content = await readFile(file, 'utf8');
+    const { data, body } = parseFrontmatter(content, file);
     const frontmatter = validate(data, ruleFrontmatterSchema, `frontmatter in ${file}`);
-    rules.push({
-      key: basename(source, '.md'),
-      source,
-      description: frontmatter.description,
-      body,
-    });
+    const key = basename(source, '.md');
+    rules.push({ key, source, description: frontmatter.description, body });
   }
 
   return rules;
@@ -170,12 +167,15 @@ async function loadSkills(dir: string): Promise<Skill[]> {
   const skills: Skill[] = [];
   const keys = new Map<string, string>();
 
-  for (const manifest of await list(dir, 'skills/*/SKILL.md')) {
+  const manifests = await list(dir, 'skills/*/SKILL.md');
+  for (const manifest of manifests) {
     const file = join(dir, manifest);
     const source = dirname(manifest);
-    const { data } = parseFrontmatter(await readFile(file, 'utf8'), file);
+    const content = await readFile(file, 'utf8');
+    const { data } = parseFrontmatter(content, file);
     const frontmatter = validate(data, skillFrontmatterSchema, `frontmatter in ${file}`);
-    const key = frontmatter.name ?? validate(basename(source), skillName, `skill folder ${source}`);
+    const folderName = basename(source);
+    const key = frontmatter.name ?? validate(folderName, skillName, `skill folder ${source}`);
 
     const duplicate = keys.get(key);
     if (typeof duplicate === 'string') {
@@ -185,14 +185,9 @@ async function loadSkills(dir: string): Promise<Skill[]> {
     }
     keys.set(key, source);
 
-    skills.push({
-      key,
-      source,
-      description: frontmatter.description,
-      files: await glob('**/*', { cwd: join(dir, source), dot: true, onlyFiles: true }).then(
-        (files) => files.sort(),
-      ),
-    });
+    const skillDir = join(dir, source);
+    const files = await listSkillFiles(skillDir);
+    skills.push({ key, source, description: frontmatter.description, files });
   }
 
   return skills;
@@ -201,17 +196,14 @@ async function loadSkills(dir: string): Promise<Skill[]> {
 async function loadCommands(dir: string): Promise<Command[]> {
   const commands: Command[] = [];
 
-  for (const source of await list(dir, 'commands/*.md')) {
+  const sources = await list(dir, 'commands/*.md');
+  for (const source of sources) {
     const file = join(dir, source);
     const content = await readFile(file, 'utf8');
     const { data } = parseFrontmatter(content, file);
     const frontmatter = validate(data, commandFrontmatterSchema, `frontmatter in ${file}`);
-    commands.push({
-      key: basename(source, '.md'),
-      source,
-      description: frontmatter.description,
-      content,
-    });
+    const key = basename(source, '.md');
+    commands.push({ key, source, description: frontmatter.description, content });
   }
 
   return commands;
@@ -220,13 +212,12 @@ async function loadCommands(dir: string): Promise<Command[]> {
 async function loadMcpServers(dir: string): Promise<McpServer[]> {
   const servers: McpServer[] = [];
 
-  for (const source of await list(dir, 'mcp/*.yaml')) {
-    const { description, ...config } = await readYaml(
-      join(dir, source),
-      mcpServerSchema,
-      'MCP server',
-    );
-    servers.push({ key: basename(source, '.yaml'), source, description, config });
+  const sources = await list(dir, 'mcp/*.yaml');
+  for (const source of sources) {
+    const file = join(dir, source);
+    const { description, ...config } = await readYaml(file, mcpServerSchema, 'MCP server');
+    const key = basename(source, '.yaml');
+    servers.push({ key, source, description, config });
   }
 
   return servers;
@@ -237,13 +228,17 @@ async function readYaml<T extends z.ZodType>(
   schema: T,
   what: string,
 ): Promise<z.output<T>> {
-  let data: unknown;
+  const content = await readFile(file, 'utf8');
+  const data = parseYaml(content, file);
+  return validate(data, schema, `${what} ${file}`);
+}
+
+function parseYaml(content: string, file: string): unknown {
   try {
-    data = parse(await readFile(file, 'utf8')) ?? {};
+    return parse(content) ?? {};
   } catch (error) {
     throw new TunestraError(`Invalid YAML in ${file}: ${(error as Error).message}`);
   }
-  return validate(data, schema, `${what} ${file}`);
 }
 
 function validate<T extends z.ZodType>(data: unknown, schema: T, what: string): z.output<T> {
@@ -251,12 +246,20 @@ function validate<T extends z.ZodType>(data: unknown, schema: T, what: string): 
   if (result.success) {
     return result.data;
   }
-  throw new TunestraError(`Invalid ${what}:\n${prettifyError(result.error)}`);
+  const details = prettifyError(result.error);
+  throw new TunestraError(`Invalid ${what}:\n${details}`);
 }
 
 /** Files matching the pattern, sorted so that the output does not depend on the file system. */
 async function list(dir: string, pattern: string): Promise<string[]> {
-  return (await glob(pattern, { cwd: dir, onlyFiles: true })).sort();
+  const files = await glob(pattern, { cwd: dir, onlyFiles: true });
+  return files.sort();
+}
+
+/** Every file of a skill, dotfiles included: the skill is copied as a whole. */
+async function listSkillFiles(dir: string): Promise<string[]> {
+  const files = await glob('**/*', { cwd: dir, dot: true, onlyFiles: true });
+  return files.sort();
 }
 
 async function exists(path: string): Promise<boolean> {

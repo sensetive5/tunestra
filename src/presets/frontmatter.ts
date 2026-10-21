@@ -23,9 +23,11 @@ export function parseFrontmatter(text: string, file: string): Frontmatter {
     return { data: {}, body: text };
   }
 
-  const data = parseYaml(match[1] ?? '', file);
+  const yaml = match.at(1) ?? '';
+  const data = parseYaml(yaml, file);
   if (isKeyValueMap(data)) {
-    return { data, body: text.slice(match[0].length) };
+    const body = text.slice(match[0].length);
+    return { data, body };
   }
 
   throw new TunestraError(`Invalid frontmatter in ${file}: expected key-value pairs`);
