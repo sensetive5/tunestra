@@ -4,9 +4,9 @@ import { PROJECT_CONFIG, PROJECT_DIR } from '../shared/constants/files.ts';
 import { Level } from '../shared/constants/levels.ts';
 import type { Project } from '../shared/types/preset.ts';
 import { checkExists } from '../shared/utils/fs.ts';
+import { readYaml } from '../shared/utils/yaml.ts';
 import { loadArtifacts } from './artifacts/load-artifacts.ts';
 import { projectConfigSchema } from './schema.ts';
-import { readYaml } from './yaml.ts';
 
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);

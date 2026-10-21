@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { BASIC_INPUT } from '../../__specs__/helpers/fixtures.ts';
+import { createTree } from '../../__specs__/helpers/temp.ts';
 import { loadProject } from '../load-project.ts';
-import { BASIC_INPUT, createTree } from './helpers.ts';
 
 describe('loadProject', () => {
   it('reads tunestra.yaml and artifacts from .tunestra/', async () => {

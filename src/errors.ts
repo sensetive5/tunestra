@@ -48,12 +48,3 @@ function indentLine(line: string, indent: string): string {
 
   return `${indent}${text}`;
 }
-
-/** The message of anything thrown: `catch` gives `unknown`, not always an `Error`. */
-export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-}

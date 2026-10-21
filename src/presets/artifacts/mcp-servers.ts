@@ -2,8 +2,8 @@ import { basename, join } from 'node:path';
 import type { McpServer } from '../../shared/types/preset.ts';
 import { listFiles } from '../../shared/utils/fs.ts';
 import { mapSettled } from '../../shared/utils/settled.ts';
+import { readYaml } from '../../shared/utils/yaml.ts';
 import { mcpServerSchema } from '../schema.ts';
-import { readYaml } from '../yaml.ts';
 
 export async function loadMcpServers(dir: string): Promise<ReadonlyArray<McpServer>> {
   const sources = await listFiles(dir, 'mcp/*.yaml');

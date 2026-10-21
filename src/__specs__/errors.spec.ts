@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createProblemsError, getErrorMessage } from '../errors.ts';
+import { createProblemsError } from '../errors.ts';
 
 describe('createProblemsError', () => {
   it('keeps a single problem as is', () => {
@@ -28,23 +28,5 @@ describe('createProblemsError', () => {
     const error = createProblemsError(problems);
 
     expect(error.message).toBe('Found 2 problems:\n\n1. A:\n\n   code\n\n2. B');
-  });
-});
-
-describe('getErrorMessage', () => {
-  it('returns the message of an Error', () => {
-    const error = new Error('Broken');
-
-    const message = getErrorMessage(error);
-
-    expect(message).toBe('Broken');
-  });
-
-  it('turns anything else into a string', () => {
-    const thrown = 42;
-
-    const message = getErrorMessage(thrown);
-
-    expect(message).toBe('42');
   });
 });

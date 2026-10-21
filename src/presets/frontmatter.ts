@@ -1,6 +1,7 @@
 import { TunestraError } from '../errors.ts';
 import type { Frontmatter } from '../shared/types/frontmatter.ts';
-import { parseYaml } from './yaml.ts';
+import { isKeyValueMap } from '../shared/utils/guards.ts';
+import { parseYaml } from '../shared/utils/yaml.ts';
 
 /**
  * A YAML block between two `---` lines at the very start of the file.
@@ -36,16 +37,4 @@ export function parseFrontmatter(text: string, file: string): Frontmatter {
   }
 
   throw new TunestraError(`Invalid frontmatter in ${file}: expected key-value pairs`);
-}
-
-function isKeyValueMap(value: unknown): value is Record<string, unknown> {
-  if (value === null) {
-    return false;
-  }
-
-  if (Array.isArray(value)) {
-    return false;
-  }
-
-  return typeof value === 'object';
 }

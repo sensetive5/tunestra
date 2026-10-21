@@ -1,7 +1,9 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { BASIC_INPUT } from '../../__specs__/helpers/fixtures.ts';
+import { createTree } from '../../__specs__/helpers/temp.ts';
 import { loadPreset } from '../load-preset.ts';
-import { BASIC_INPUT, createTree, MINIMAL_MANIFEST } from './helpers.ts';
+import { MINIMAL_MANIFEST } from './helpers.ts';
 
 describe('loadPreset', () => {
   it('reads the manifest and every kind of artifact', async () => {

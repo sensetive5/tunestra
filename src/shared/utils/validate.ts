@@ -1,5 +1,5 @@
 import { prettifyError, type z } from 'zod';
-import { TunestraError } from '../errors.ts';
+import { TunestraError } from '../../errors.ts';
 
 /** Checks data with a schema; `what` names the checked thing in the error. */
 export function validate<T extends z.ZodType>(data: unknown, schema: T, what: string): z.output<T> {

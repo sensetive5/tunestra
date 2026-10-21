@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Agent } from '../shared/constants/agents.ts';
 import { PresetLevel } from '../shared/constants/levels.ts';
+import { isString } from '../shared/utils/guards.ts';
 
 const keys = z.array(z.string().min(1)).readonly();
 const stringMap = z.record(z.string(), z.string());
@@ -67,10 +68,6 @@ export const mcpServerSchema = z
   .refine((server) => [server.command, server.url].filter(isString).length === 1, {
     message: 'Set either "command" (local server) or "url" (remote server)',
   });
-
-function isString(value: unknown): value is string {
-  return typeof value === 'string';
-}
 
 export const ruleFrontmatterSchema = z.looseObject({
   description: z.string().optional(),

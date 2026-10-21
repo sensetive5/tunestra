@@ -4,9 +4,9 @@ import { INSTRUCTIONS_FILE } from '../../shared/constants/files.ts';
 import type { Rule } from '../../shared/types/preset.ts';
 import { checkExists, listFiles } from '../../shared/utils/fs.ts';
 import { buildResultsError, isEveryFulfilled, mapSettled } from '../../shared/utils/settled.ts';
+import { validate } from '../../shared/utils/validate.ts';
 import { parseFrontmatter } from '../frontmatter.ts';
 import { ruleFrontmatterSchema } from '../schema.ts';
-import { validate } from '../validate.ts';
 
 export function buildInstructionsKey(presetName: string): string {
   return `instructions@${presetName}`;

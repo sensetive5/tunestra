@@ -3,9 +3,9 @@ import { basename, join } from 'node:path';
 import type { Command } from '../../shared/types/preset.ts';
 import { listFiles } from '../../shared/utils/fs.ts';
 import { mapSettled } from '../../shared/utils/settled.ts';
+import { validate } from '../../shared/utils/validate.ts';
 import { parseFrontmatter } from '../frontmatter.ts';
 import { commandFrontmatterSchema } from '../schema.ts';
-import { validate } from '../validate.ts';
 
 export async function loadCommands(dir: string): Promise<ReadonlyArray<Command>> {
   const sources = await listFiles(dir, 'commands/*.md');

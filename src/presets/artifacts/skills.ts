@@ -4,9 +4,9 @@ import { createProblemsError } from '../../errors.ts';
 import type { Skill } from '../../shared/types/preset.ts';
 import { listAllFiles, listFiles } from '../../shared/utils/fs.ts';
 import { mapSettled } from '../../shared/utils/settled.ts';
+import { validate } from '../../shared/utils/validate.ts';
 import { parseFrontmatter } from '../frontmatter.ts';
 import { skillFrontmatterSchema, skillName } from '../schema.ts';
-import { validate } from '../validate.ts';
 
 export async function loadSkills(dir: string): Promise<ReadonlyArray<Skill>> {
   const manifests = await listFiles(dir, 'skills/*/SKILL.md');

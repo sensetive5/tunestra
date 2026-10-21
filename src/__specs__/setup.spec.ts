@@ -1,12 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { cp, mkdtemp, readdir, readFile, readlink } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { cp, readdir, readFile, readlink } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { FIXTURES_DIR } from './helpers/fixtures.ts';
+import { createTempDir } from './helpers/temp.ts';
 
 const CLI = resolve('src/cli/index.ts');
-const FIXTURES = resolve('src/__specs__/fixtures');
 const STATE_DIR = '.tunestra/state/';
 
 /** symlinks.json: link path in the project → expected target. */
@@ -51,14 +51,12 @@ function isGenerated(file: string, inputFiles: ReadonlyArray<string>): boolean {
 }
 
 async function runFixture(name: string): Promise<void> {
-  const fixture = join(FIXTURES, name);
+  const fixture = join(FIXTURES_DIR, name);
   const inputDir = join(fixture, 'input');
   const expectedDir = join(fixture, 'expected');
   const symlinksPath = join(fixture, 'symlinks.json');
 
-  const tempDir = tmpdir();
-  const tempPrefix = join(tempDir, `tunestra-${name}-`);
-  const workdir = await mkdtemp(tempPrefix);
+  const workdir = await createTempDir(name);
   await cp(inputDir, workdir, { recursive: true });
 
   const project = join(workdir, 'project');
