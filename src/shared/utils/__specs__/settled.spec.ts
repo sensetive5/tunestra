@@ -4,7 +4,9 @@ import { buildResultsError, getValues, isEveryFulfilled } from '../settled.ts';
 
 describe('isEveryFulfilled', () => {
   it('is true when every promise is fulfilled', async () => {
-    const results = await Promise.allSettled([Promise.resolve(1), Promise.resolve('a')]);
+    const number = Promise.resolve(1);
+    const text = Promise.resolve('a');
+    const results = await Promise.allSettled([number, text]);
 
     const isFulfilled = isEveryFulfilled(results);
 
@@ -12,8 +14,10 @@ describe('isEveryFulfilled', () => {
   });
 
   it('is false when one promise is rejected', async () => {
-    const rejection = Promise.reject(new TunestraError('Broken'));
-    const results = await Promise.allSettled([Promise.resolve(1), rejection]);
+    const number = Promise.resolve(1);
+    const error = new TunestraError('Broken');
+    const rejection = Promise.reject(error);
+    const results = await Promise.allSettled([number, rejection]);
 
     const isFulfilled = isEveryFulfilled(results);
 
@@ -23,7 +27,9 @@ describe('isEveryFulfilled', () => {
 
 describe('getValues', () => {
   it('keeps the order of the results', async () => {
-    const results = await Promise.allSettled([Promise.resolve(1), Promise.resolve(2)]);
+    const first = Promise.resolve(1);
+    const second = Promise.resolve(2);
+    const results = await Promise.allSettled([first, second]);
     const fulfilled = results.filter((result) => result.status === 'fulfilled');
 
     const values = getValues(fulfilled);
@@ -34,9 +40,12 @@ describe('getValues', () => {
 
 describe('buildResultsError', () => {
   it('collects problems in the order of the results', async () => {
-    const first = Promise.reject(new TunestraError('First'));
-    const second = Promise.reject(new TunestraError('Second'));
-    const results = await Promise.allSettled([second, Promise.resolve(1), first]);
+    const firstError = new TunestraError('First');
+    const secondError = new TunestraError('Second');
+    const first = Promise.reject(firstError);
+    const second = Promise.reject(secondError);
+    const success = Promise.resolve(1);
+    const results = await Promise.allSettled([second, success, first]);
 
     const error = buildResultsError(results);
 

@@ -9,10 +9,12 @@ const MINIMAL_MANIFEST = 'name: x\nlevel: team\n';
 
 /** Creates a temporary directory with the given files. */
 async function createTree(files: Record<string, string>): Promise<string> {
-  const tempPrefix = join(tmpdir(), 'tunestra-presets-');
+  const tempDir = tmpdir();
+  const tempPrefix = join(tempDir, 'tunestra-presets-');
   const root = await mkdtemp(tempPrefix);
+  const entries = Object.entries(files);
 
-  for (const [path, content] of Object.entries(files)) {
+  for (const [path, content] of entries) {
     const file = join(root, path);
     const dir = dirname(file);
 

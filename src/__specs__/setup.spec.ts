@@ -3,10 +3,14 @@ import { cp, mkdtemp, readdir, readFile, readlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 const CLI = resolve('src/cli/index.ts');
 const FIXTURES = resolve('src/__specs__/fixtures');
 const STATE_DIR = '.tunestra/state/';
+
+/** symlinks.json: link path in the project → expected target. */
+const symlinksSchema = z.record(z.string(), z.string());
 
 // Files that stand for dotfiles which cannot be stored in the fixture as is.
 const RENAMED: Record<string, string> = {
@@ -52,7 +56,8 @@ async function runFixture(name: string): Promise<void> {
   const expectedDir = join(fixture, 'expected');
   const symlinksPath = join(fixture, 'symlinks.json');
 
-  const tempPrefix = join(tmpdir(), `tunestra-${name}-`);
+  const tempDir = tmpdir();
+  const tempPrefix = join(tempDir, `tunestra-${name}-`);
   const workdir = await mkdtemp(tempPrefix);
   await cp(inputDir, workdir, { recursive: true });
 
@@ -79,9 +84,11 @@ async function runFixture(name: string): Promise<void> {
   }
 
   const symlinksJson = await readFile(symlinksPath, 'utf8');
-  const symlinks: Record<string, string> = JSON.parse(symlinksJson);
+  const symlinksData: unknown = JSON.parse(symlinksJson);
+  const symlinks = symlinksSchema.parse(symlinksData);
+  const symlinkEntries = Object.entries(symlinks);
 
-  for (const [link, target] of Object.entries(symlinks)) {
+  for (const [link, target] of symlinkEntries) {
     const linkPath = join(project, link);
     const actualTarget = await readlink(linkPath);
 
