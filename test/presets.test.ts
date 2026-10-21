@@ -6,6 +6,7 @@ import { parseFrontmatter } from '../src/presets/frontmatter.ts';
 import { loadPreset, loadProject } from '../src/presets/load.ts';
 
 const BASIC = resolve('test/fixtures/basic/input');
+const MINIMAL_MANIFEST = 'name: x\nlevel: team\n';
 
 /** Creates a temporary directory with the given files. */
 async function tree(files: Record<string, string>): Promise<string> {
@@ -25,46 +26,80 @@ async function tree(files: Record<string, string>): Promise<string> {
 
 describe('parseFrontmatter', () => {
   it('splits frontmatter and body', () => {
-    expect(parseFrontmatter('---\ndescription: Hi\n---\n# Title\n', 'a.md')).toEqual({
-      data: { description: 'Hi' },
+    const text = '---\ndescription: Hi\n---\n# Title\n';
+
+    const result = parseFrontmatter(text, 'a.md');
+
+    expect(result).toEqual({
+      data: {
+        description: 'Hi',
+      },
       body: '# Title\n',
     });
   });
 
   it('returns the whole text when there is no frontmatter', () => {
-    expect(parseFrontmatter('# Title\n', 'a.md')).toEqual({
+    const text = '# Title\n';
+
+    const result = parseFrontmatter(text, 'a.md');
+
+    expect(result).toEqual({
       data: {},
       body: '# Title\n',
     });
   });
 
   it('accepts empty frontmatter', () => {
-    expect(parseFrontmatter('---\n---\nText', 'a.md')).toEqual({
+    const text = '---\n---\nText';
+
+    const result = parseFrontmatter(text, 'a.md');
+
+    expect(result).toEqual({
       data: {},
       body: 'Text',
     });
   });
 
   it('rejects frontmatter that is not key-value pairs', () => {
-    expect(() => parseFrontmatter('---\n- a\n- b\n---\n', 'a.md')).toThrow('key-value pairs');
+    const text = '---\n- a\n- b\n---\n';
+
+    const act = () => parseFrontmatter(text, 'a.md');
+
+    expect(act).toThrow('key-value pairs');
   });
 
   it('names the file when YAML is broken', () => {
-    expect(() => parseFrontmatter('---\nkey: [\n---\n', 'a.md')).toThrow('a.md');
+    const text = '---\nkey: [\n---\n';
+
+    const act = () => parseFrontmatter(text, 'a.md');
+
+    expect(act).toThrow('a.md');
   });
 });
 
 describe('loadPreset', () => {
   it('reads the manifest and every kind of artifact', async () => {
-    const team = await loadPreset(join(BASIC, 'presets/team'));
+    const dir = join(BASIC, 'presets/team');
+
+    const team = await loadPreset(dir);
 
     expect(team).toMatchObject({
       name: 'team',
       level: 'team',
       description: 'Frontend team conventions',
       extends: ['../base'],
-      exclude: { skills: ['code-review'] },
-      overrides: { mcp: { tracker: { env: { QUEUE: 'TEAM' } } } },
+      exclude: {
+        skills: ['code-review'],
+      },
+      overrides: {
+        mcp: {
+          tracker: {
+            env: {
+              QUEUE: 'TEAM',
+            },
+          },
+        },
+      },
     });
     expect(team.rules).toEqual([
       {
@@ -99,14 +134,13 @@ describe('loadPreset', () => {
   });
 
   it('reads level instructions and MCP servers', async () => {
-    const base = await loadPreset(join(BASIC, 'presets/base'));
+    const dir = join(BASIC, 'presets/base');
 
+    const base = await loadPreset(dir);
+
+    const ruleKeys = base.rules.map((rule) => rule.key);
     expect(base.extends).toEqual([]);
-    expect(base.rules.map((rule) => rule.key)).toEqual([
-      'instructions@base',
-      'code-style',
-      'security',
-    ]);
+    expect(ruleKeys).toEqual(['instructions@base', 'code-style', 'security']);
     expect(base.mcp).toEqual([
       {
         key: 'tracker',
@@ -125,72 +159,100 @@ describe('loadPreset', () => {
   });
 
   it('fails when the manifest is missing', async () => {
-    const dir = await tree({ 'rules/a.md': 'A' });
-    await expect(loadPreset(dir)).rejects.toThrow('tunestra.preset.yaml is missing');
+    const dir = await tree({
+      'rules/a.md': 'A',
+    });
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('tunestra.preset.yaml is missing');
   });
 
   it('rejects unknown fields and wrong levels', async () => {
     const dir = await tree({
       'tunestra.preset.yaml': 'name: x\nlevel: project\nextend: [../base]\n',
     });
-    const error = loadPreset(dir);
-    await expect(error).rejects.toThrow('level');
-    await expect(error).rejects.toThrow('extend');
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('level');
+    await expect(result).rejects.toThrow('extend');
   });
 
   it('requires a description for skills', async () => {
     const dir = await tree({
-      'tunestra.preset.yaml': 'name: x\nlevel: team\n',
+      'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'skills/a/SKILL.md': '---\nname: a\n---\nText',
     });
-    await expect(loadPreset(dir)).rejects.toThrow('description');
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('description');
   });
 
   it('rejects skill names that are not safe directory names', async () => {
     const dir = await tree({
-      'tunestra.preset.yaml': 'name: x\nlevel: team\n',
+      'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'skills/a/SKILL.md': '---\nname: ../../etc\ndescription: Bad\n---\n',
     });
-    await expect(loadPreset(dir)).rejects.toThrow('lowercase letters');
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('lowercase letters');
   });
 
   it('rejects two skills with the same name', async () => {
     const dir = await tree({
-      'tunestra.preset.yaml': 'name: x\nlevel: team\n',
+      'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'skills/a/SKILL.md': '---\nname: same\ndescription: A\n---\n',
       'skills/b/SKILL.md': '---\nname: same\ndescription: B\n---\n',
     });
-    await expect(loadPreset(dir)).rejects.toThrow('the same name "same"');
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('the same name "same"');
   });
 
   it('requires either command or url for MCP servers', async () => {
     const dir = await tree({
-      'tunestra.preset.yaml': 'name: x\nlevel: team\n',
+      'tunestra.preset.yaml': MINIMAL_MANIFEST,
       'mcp/a.yaml': 'description: Nothing to run\n',
     });
-    await expect(loadPreset(dir)).rejects.toThrow('either "command"');
+
+    const result = loadPreset(dir);
+
+    await expect(result).rejects.toThrow('either "command"');
   });
 });
 
 describe('loadProject', () => {
   it('reads tunestra.yaml and artifacts from .tunestra/', async () => {
-    const project = await loadProject(join(BASIC, 'project'));
+    const dir = join(BASIC, 'project');
+    const artifactsDir = join(dir, '.tunestra');
 
+    const project = await loadProject(dir);
+
+    const ruleKeys = project.rules.map((rule) => rule.key);
+    const skillKeys = project.skills.map((skill) => skill.key);
     expect(project).toMatchObject({
       name: 'project',
       level: 'project',
       extends: ['../presets/team'],
       agents: ['claude'],
-      dir: join(BASIC, 'project'),
-      artifactsDir: join(BASIC, 'project/.tunestra'),
+      dir,
+      artifactsDir,
     });
-    expect(project.rules.map((rule) => rule.key)).toEqual(['instructions@project', 'architecture']);
-    expect(project.skills.map((skill) => skill.key)).toEqual(['domain-model']);
+    expect(ruleKeys).toEqual(['instructions@project', 'architecture']);
+    expect(skillKeys).toEqual(['domain-model']);
   });
 
   it('uses defaults for an empty config', async () => {
-    const dir = await tree({ 'my-service/tunestra.yaml': '' });
-    const project = await loadProject(join(dir, 'my-service'));
+    const root = await tree({
+      'my-service/tunestra.yaml': '',
+    });
+    const dir = join(root, 'my-service');
+
+    const project = await loadProject(dir);
 
     expect(project).toMatchObject({
       name: 'my-service',
@@ -205,6 +267,9 @@ describe('loadProject', () => {
 
   it('suggests init when tunestra.yaml is missing', async () => {
     const dir = await tree({});
-    await expect(loadProject(dir)).rejects.toThrow('Run `tunestra init` first');
+
+    const result = loadProject(dir);
+
+    await expect(result).rejects.toThrow('Run `tunestra init` first');
   });
 });

@@ -4,10 +4,11 @@ import pkg from '../package.json' with { type: 'json' };
 
 describe('cli', () => {
   it('prints the version from package.json', () => {
-    const output = execFileSync(process.execPath, ['src/cli/index.ts', '--version'], {
-      encoding: 'utf8',
-    });
+    const args = ['src/cli/index.ts', '--version'];
 
-    expect(output.trim()).toBe(pkg.version);
+    const output = execFileSync(process.execPath, args, { encoding: 'utf8' });
+
+    const version = output.trim();
+    expect(version).toBe(pkg.version);
   });
 });
