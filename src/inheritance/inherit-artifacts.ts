@@ -57,6 +57,8 @@ export function createOrigin(level: Preset): Origin {
   return {
     name: level.name,
     level: level.level,
+    dir: level.dir,
+    artifactsDir: level.artifactsDir,
   };
 }
 
