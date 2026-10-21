@@ -27,39 +27,39 @@ export const PROJECT_DIR = '.tunestra';
 export type Level = 'project' | 'domain' | 'team' | 'base';
 
 /** Paths in artifacts are relative to the preset's artifact directory. */
-export interface Rule {
+export type Rule = {
   key: string;
   source: string;
   description: string | undefined;
   /** Rule text without frontmatter. */
   body: string;
-}
+};
 
-export interface Skill {
+export type Skill = {
   key: string;
   /** The skill directory. */
   source: string;
   description: string;
   /** Every file of the skill, relative to its directory. */
   files: string[];
-}
+};
 
-export interface Command {
+export type Command = {
   key: string;
   source: string;
   description: string | undefined;
   /** The whole file, frontmatter included: agents read it. */
   content: string;
-}
+};
 
-export interface McpServer {
+export type McpServer = {
   key: string;
   source: string;
   description: string | undefined;
   config: McpConfig;
-}
+};
 
-export interface Preset {
+export type Preset = {
   name: string;
   level: Level;
   description: string | undefined;
@@ -74,12 +74,12 @@ export interface Preset {
   skills: Skill[];
   commands: Command[];
   mcp: McpServer[];
-}
+};
 
-export interface Project extends Preset {
+export type Project = Preset & {
   level: 'project';
   agents: Agent[];
-}
+};
 
 export function instructionsKey(presetName: string): string {
   return `instructions@${presetName}`;

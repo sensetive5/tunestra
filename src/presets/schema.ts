@@ -3,7 +3,12 @@ import { z } from 'zod';
 const keys = z.array(z.string().min(1));
 const stringMap = z.record(z.string(), z.string());
 
-/** Agent Skills naming rule; the name also becomes a directory name. */
+/**
+ * Agent Skills naming rule; the name also becomes a directory name.
+ *
+ * Valid:   "code-review", "storybook", "v2"
+ * Invalid: "Code-Review" (uppercase), "code--review" or "-review" (wrong hyphens), "../../etc"
+ */
 export const skillName = z
   .string()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lowercase letters, digits and single hyphens')

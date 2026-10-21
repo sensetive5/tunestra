@@ -34,7 +34,7 @@ describe('parseFrontmatter', () => {
   });
 
   it('names the file when YAML is broken', () => {
-    expect(() => parseFrontmatter('---\nkey: [\n---\n', 'a.md')).toThrow(/a\.md/);
+    expect(() => parseFrontmatter('---\nkey: [\n---\n', 'a.md')).toThrow('a.md');
   });
 });
 
@@ -77,7 +77,7 @@ describe('loadPreset', () => {
         key: 'release-notes',
         source: 'commands/release-notes.md',
         description: 'Draft release notes from merged changes',
-        content: expect.stringMatching(/^---\ndescription:/),
+        content: expect.stringContaining('---\ndescription:'),
       },
     ]);
   });
@@ -115,8 +115,8 @@ describe('loadPreset', () => {
       'tunestra.preset.yaml': 'name: x\nlevel: project\nextend: [../base]\n',
     });
     const error = loadPreset(dir);
-    await expect(error).rejects.toThrow(/level/);
-    await expect(error).rejects.toThrow(/extend/);
+    await expect(error).rejects.toThrow('level');
+    await expect(error).rejects.toThrow('extend');
   });
 
   it('requires a description for skills', async () => {
@@ -124,7 +124,7 @@ describe('loadPreset', () => {
       'tunestra.preset.yaml': 'name: x\nlevel: team\n',
       'skills/a/SKILL.md': '---\nname: a\n---\nText',
     });
-    await expect(loadPreset(dir)).rejects.toThrow(/description/);
+    await expect(loadPreset(dir)).rejects.toThrow('description');
   });
 
   it('rejects skill names that are not safe directory names', async () => {
@@ -132,7 +132,7 @@ describe('loadPreset', () => {
       'tunestra.preset.yaml': 'name: x\nlevel: team\n',
       'skills/a/SKILL.md': '---\nname: ../../etc\ndescription: Bad\n---\n',
     });
-    await expect(loadPreset(dir)).rejects.toThrow(/lowercase letters/);
+    await expect(loadPreset(dir)).rejects.toThrow('lowercase letters');
   });
 
   it('rejects two skills with the same name', async () => {
@@ -149,7 +149,7 @@ describe('loadPreset', () => {
       'tunestra.preset.yaml': 'name: x\nlevel: team\n',
       'mcp/a.yaml': 'description: Nothing to run\n',
     });
-    await expect(loadPreset(dir)).rejects.toThrow(/either "command"/);
+    await expect(loadPreset(dir)).rejects.toThrow('either "command"');
   });
 });
 
