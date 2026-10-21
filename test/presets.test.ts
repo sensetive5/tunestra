@@ -9,11 +9,17 @@ const BASIC = resolve('test/fixtures/basic/input');
 
 /** Creates a temporary directory with the given files. */
 async function tree(files: Record<string, string>): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'tunestra-presets-'));
+  const tempPrefix = join(tmpdir(), 'tunestra-presets-');
+  const root = await mkdtemp(tempPrefix);
+
   for (const [path, content] of Object.entries(files)) {
-    await mkdir(dirname(join(root, path)), { recursive: true });
-    await writeFile(join(root, path), content);
+    const file = join(root, path);
+    const dir = dirname(file);
+
+    await mkdir(dir, { recursive: true });
+    await writeFile(file, content);
   }
+
   return root;
 }
 

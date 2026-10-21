@@ -15,6 +15,7 @@ const FRONTMATTER_PATTERN = /^---\r?\n(?:([\s\S]*?)\r?\n)?---(?:\r?\n|$)/;
 /** Splits a markdown file into YAML frontmatter and body. A file without frontmatter has empty data. */
 export function parseFrontmatter(text: string, file: string): Frontmatter {
   const match = FRONTMATTER_PATTERN.exec(text);
+
   if (match === null) {
     return {
       data: {},
@@ -24,8 +25,10 @@ export function parseFrontmatter(text: string, file: string): Frontmatter {
 
   const yaml = match.at(1) ?? '';
   const data = parseYaml(yaml, file);
+
   if (isKeyValueMap(data)) {
     const body = text.slice(match[0].length);
+
     return {
       data,
       body,
@@ -48,8 +51,10 @@ function isKeyValueMap(value: unknown): value is Record<string, unknown> {
   if (value === null) {
     return false;
   }
+
   if (Array.isArray(value)) {
     return false;
   }
+
   return typeof value === 'object';
 }
