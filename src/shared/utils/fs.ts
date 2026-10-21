@@ -1,11 +1,27 @@
 import { stat } from 'node:fs/promises';
 import { glob } from 'tinyglobby';
 
+/** A missing path is `false`; any other failure, like no permission, is thrown. */
 export async function checkExists(path: string): Promise<boolean> {
-  return stat(path).then(
-    () => true,
-    () => false,
-  );
+  try {
+    await stat(path);
+
+    return true;
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+function isMissingPathError(error: unknown): error is NodeJS.ErrnoException {
+  if (error instanceof Error) {
+    return 'code' in error && error.code === 'ENOENT';
+  }
+
+  return false;
 }
 
 /**
