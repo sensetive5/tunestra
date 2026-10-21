@@ -1,33 +1,11 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadPreset, loadProject } from '../load.ts';
-
-const BASIC = resolve('src/__specs__/fixtures/basic/input');
-const MINIMAL_MANIFEST = 'name: x\nlevel: team\n';
-
-/** Creates a temporary directory with the given files. */
-async function createTree(files: Record<string, string>): Promise<string> {
-  const tempDir = tmpdir();
-  const tempPrefix = join(tempDir, 'tunestra-presets-');
-  const root = await mkdtemp(tempPrefix);
-  const entries = Object.entries(files);
-
-  for (const [path, content] of entries) {
-    const file = join(root, path);
-    const dir = dirname(file);
-
-    await mkdir(dir, { recursive: true });
-    await writeFile(file, content);
-  }
-
-  return root;
-}
+import { loadPreset } from '../load-preset.ts';
+import { BASIC_INPUT, createTree, MINIMAL_MANIFEST } from './helpers.ts';
 
 describe('loadPreset', () => {
   it('reads the manifest and every kind of artifact', async () => {
-    const dir = join(BASIC, 'presets/team');
+    const dir = join(BASIC_INPUT, 'presets/team');
 
     const team = await loadPreset(dir);
 
@@ -82,7 +60,7 @@ describe('loadPreset', () => {
   });
 
   it('reads level instructions and MCP servers', async () => {
-    const dir = join(BASIC, 'presets/base');
+    const dir = join(BASIC_INPUT, 'presets/base');
 
     const base = await loadPreset(dir);
 
@@ -192,54 +170,5 @@ describe('loadPreset', () => {
     const result = loadPreset(dir);
 
     await expect(result).rejects.toThrow('either "command"');
-  });
-});
-
-describe('loadProject', () => {
-  it('reads tunestra.yaml and artifacts from .tunestra/', async () => {
-    const dir = join(BASIC, 'project');
-    const artifactsDir = join(dir, '.tunestra');
-
-    const project = await loadProject(dir);
-
-    const ruleKeys = project.rules.map((rule) => rule.key);
-    const skillKeys = project.skills.map((skill) => skill.key);
-    expect(project).toMatchObject({
-      name: 'project',
-      level: 'project',
-      extends: ['../presets/team'],
-      agents: ['claude'],
-      dir,
-      artifactsDir,
-    });
-    expect(ruleKeys).toEqual(['instructions@project', 'architecture']);
-    expect(skillKeys).toEqual(['domain-model']);
-  });
-
-  it('uses defaults for an empty config', async () => {
-    const root = await createTree({
-      'my-service/tunestra.yaml': '',
-    });
-    const dir = join(root, 'my-service');
-
-    const project = await loadProject(dir);
-
-    expect(project).toMatchObject({
-      name: 'my-service',
-      extends: [],
-      agents: ['claude'],
-      rules: [],
-      skills: [],
-      commands: [],
-      mcp: [],
-    });
-  });
-
-  it('suggests init when tunestra.yaml is missing', async () => {
-    const dir = await createTree({});
-
-    const result = loadProject(dir);
-
-    await expect(result).rejects.toThrow('Run `tunestra init` first');
   });
 });

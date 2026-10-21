@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TunestraError } from '../../../errors.ts';
-import { buildResultsError, getValues, isEveryFulfilled } from '../settled.ts';
+import { buildResultsError, getValues, isEveryFulfilled, mapSettled } from '../settled.ts';
 
 describe('isEveryFulfilled', () => {
   it('is true when every promise is fulfilled', async () => {
@@ -63,5 +63,32 @@ describe('buildResultsError', () => {
     const error = buildResultsError(results);
 
     expect(error).toBe(unexpected);
+  });
+});
+
+describe('mapSettled', () => {
+  it('returns the values in the order of the items', async () => {
+    const items = [3, 1, 2];
+
+    const values = await mapSettled(items, async (item) => item * 10);
+
+    expect(values).toEqual([30, 10, 20]);
+  });
+
+  it('reports the problems of every failed item', async () => {
+    const items = ['a', 'b', 'c'];
+    const acceptOnlyB = async (item: string): Promise<string> => {
+      if (item === 'b') {
+        return item;
+      }
+
+      throw new TunestraError(`Bad ${item}`);
+    };
+
+    const result = mapSettled(items, acceptOnlyB);
+
+    await expect(result).rejects.toMatchObject({
+      problems: ['Bad a', 'Bad c'],
+    });
   });
 });

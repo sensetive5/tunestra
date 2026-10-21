@@ -62,3 +62,6 @@ export type Project = Preset<
     agents: ReadonlyArray<Agent>;
   }
 >;
+
+/** The artifacts of one level, collected from its folders. */
+export type Artifacts = Pick<Preset, 'rules' | 'skills' | 'commands' | 'mcp'>;

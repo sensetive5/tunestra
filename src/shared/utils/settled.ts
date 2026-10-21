@@ -50,3 +50,21 @@ export function buildResultsError(results: ReadonlyArray<PromiseSettledResult<un
 
   return createProblemsError(problems);
 }
+
+/**
+ * Maps every item with an async function at the same time. Returns the values in the order
+ * of the items, or throws one error with the problems of every failed item.
+ */
+export async function mapSettled<TItem, TValue>(
+  items: ReadonlyArray<TItem>,
+  map: (item: TItem) => Promise<TValue>,
+): Promise<ReadonlyArray<TValue>> {
+  const mappings = items.map((item) => map(item));
+  const results = await Promise.allSettled(mappings);
+
+  if (isEveryFulfilled(results)) {
+    return getValues(results);
+  }
+
+  throw buildResultsError(results);
+}
