@@ -1,5 +1,5 @@
 import { parse } from 'yaml';
-import { TunestraError } from '../errors.ts';
+import { getErrorMessage, TunestraError } from '../errors.ts';
 import type { Frontmatter } from '../shared/types/frontmatter.ts';
 
 /**
@@ -42,7 +42,9 @@ function parseYaml(text: string, file: string): unknown {
   try {
     return parse(text) ?? {};
   } catch (error) {
-    throw new TunestraError(`Invalid frontmatter in ${file}: ${(error as Error).message}`);
+    const reason = getErrorMessage(error);
+
+    throw new TunestraError(`Invalid frontmatter in ${file}: ${reason}`);
   }
 }
 

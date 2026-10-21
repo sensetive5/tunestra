@@ -4,7 +4,7 @@ import { glob } from 'tinyglobby';
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { prettifyError } from 'zod';
-import { createProblemsError, TunestraError } from '../errors.ts';
+import { createProblemsError, getErrorMessage, TunestraError } from '../errors.ts';
 import {
   INSTRUCTIONS_FILE,
   PRESET_MANIFEST,
@@ -293,7 +293,9 @@ function parseYaml(content: string, file: string): unknown {
   try {
     return parse(content) ?? {};
   } catch (error) {
-    throw new TunestraError(`Invalid YAML in ${file}: ${(error as Error).message}`);
+    const reason = getErrorMessage(error);
+
+    throw new TunestraError(`Invalid YAML in ${file}: ${reason}`);
   }
 }
 
