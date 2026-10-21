@@ -14,3 +14,14 @@ export const Level = {
 } as const;
 
 export type Level = (typeof Level)[keyof typeof Level];
+
+/**
+ * Order of levels from specific to general. The number also prefixes generated rule files,
+ * so that agents read specific rules first: `10-project-architecture.md`.
+ */
+export const LEVEL_RANK = {
+  [Level.Project]: 10,
+  [Level.Team]: 20,
+  [Level.Domain]: 30,
+  [Level.Base]: 40,
+} as const satisfies Record<Level, number>;
