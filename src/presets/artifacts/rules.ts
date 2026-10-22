@@ -8,6 +8,8 @@ import { validate } from '../../shared/utils/validate.ts';
 import { parseFrontmatter } from '../frontmatter.ts';
 import { ruleFrontmatterSchema } from '../schema.ts';
 
+const INSTRUCTIONS_DESCRIPTION = 'Main instructions of the level';
+
 export function buildInstructionsKey(presetName: string): string {
   return `instructions@${presetName}`;
 }
@@ -49,7 +51,7 @@ async function loadInstructions(dir: string, presetName: string): Promise<Rule |
   return {
     key,
     source: INSTRUCTIONS_FILE,
-    description: undefined,
+    description: INSTRUCTIONS_DESCRIPTION,
     body,
   };
 }

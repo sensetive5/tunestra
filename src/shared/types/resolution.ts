@@ -6,6 +6,10 @@ import type { Command, McpServer, Rule, Skill } from './preset.ts';
 export type Origin = {
   name: string;
   level: Level;
+  /** Directory of the manifest. */
+  dir: string;
+  /** Directory with the level's artifacts; `source` paths of artifacts are relative to it. */
+  artifactsDir: string;
 };
 
 /**

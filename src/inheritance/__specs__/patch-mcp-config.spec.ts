@@ -56,7 +56,7 @@ describe('patchMcpConfig', () => {
     };
     const patch = {
       headers: {
-        Authorization: 'Bearer ${TOKEN}',
+        Authorization: 'Bearer <token>',
       },
     };
 
@@ -64,7 +64,7 @@ describe('patchMcpConfig', () => {
 
     expect(patched.headers).toEqual({
       Accept: 'json',
-      Authorization: 'Bearer ${TOKEN}',
+      Authorization: 'Bearer <token>',
     });
   });
 });

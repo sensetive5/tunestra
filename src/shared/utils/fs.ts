@@ -1,4 +1,4 @@
-import { stat } from 'node:fs/promises';
+import { lstat, readFile, stat } from 'node:fs/promises';
 import { glob } from 'tinyglobby';
 
 /** A missing path is `false`; any other failure, like no permission, is thrown. */
@@ -46,4 +46,45 @@ export async function listAllFiles(dir: string): Promise<ReadonlyArray<string>> 
   });
 
   return files.sort();
+}
+
+/** What is at a path, without following a symbolic link. */
+export const PathType = {
+  Missing: 'missing',
+  Symlink: 'symlink',
+  Other: 'other',
+} as const;
+
+export type PathType = (typeof PathType)[keyof typeof PathType];
+
+export async function getPathType(path: string): Promise<PathType> {
+  try {
+    const stats = await lstat(path);
+    const isSymlink = stats.isSymbolicLink();
+
+    if (isSymlink) {
+      return PathType.Symlink;
+    }
+
+    return PathType.Other;
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return PathType.Missing;
+    }
+
+    throw error;
+  }
+}
+
+/** The text of a file, or `undefined` when there is no such file. */
+export async function readFileIfExists(path: string): Promise<string | undefined> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return undefined;
+    }
+
+    throw error;
+  }
 }

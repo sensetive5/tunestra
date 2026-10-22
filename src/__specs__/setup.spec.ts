@@ -95,8 +95,7 @@ async function runFixture(name: string): Promise<void> {
 }
 
 describe('fixtures', () => {
-  // Enable when `tunestra setup` is implemented.
-  it.skip('basic', async () => {
+  it('basic', async () => {
     await runFixture('basic');
   });
 });
