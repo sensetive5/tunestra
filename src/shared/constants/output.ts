@@ -28,3 +28,9 @@ export const AGENTS_SKILLS_DIR = `${AGENTS_DIR}/skills`;
 export const STATE_DIR = '.tunestra/state';
 
 export const GITIGNORE_FILE = '.gitignore';
+
+/** The registry of outputs from the last setup. */
+export const STATE_FILE = `${STATE_DIR}/outputs.json`;
+
+/** Bump when the shape of the state file changes. */
+export const STATE_VERSION = 1;

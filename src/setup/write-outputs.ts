@@ -22,10 +22,12 @@ async function writeOutput(projectDir: string, output: Output): Promise<void> {
 
   switch (output.kind) {
     case OutputKind.File:
+      await removeSymlink(path);
       await writeFile(path, output.content);
 
       return;
     case OutputKind.Copy:
+      await removeSymlink(path);
       await copyFile(output.from, path);
 
       return;
@@ -40,7 +42,9 @@ async function writeOutput(projectDir: string, output: Output): Promise<void> {
 async function replaceSymlink(path: string, output: OutputSymlink): Promise<void> {
   const pathType = await getPathType(path);
 
-  if (pathType === PathType.Other) {
+  const isTaken = pathType === PathType.Directory || pathType === PathType.File;
+
+  if (isTaken) {
     throw new TunestraError(
       `${output.path} already exists and was not created by tunestra. Move it away and run tunestra setup again`,
     );
@@ -51,4 +55,13 @@ async function replaceSymlink(path: string, output: OutputSymlink): Promise<void
   }
 
   await symlink(output.target, path);
+}
+
+/** Writing a file through a symlink would change the file it points to. */
+async function removeSymlink(path: string): Promise<void> {
+  const pathType = await getPathType(path);
+
+  if (pathType === PathType.Symlink) {
+    await unlink(path);
+  }
 }

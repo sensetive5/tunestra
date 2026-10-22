@@ -13,7 +13,9 @@ import type { Output, OutputCopy, OutputFile, SetupPlan } from '../shared/types/
 import type { Rule, Skill } from '../shared/types/preset.ts';
 import type { Resolution, ResolvedArtifact } from '../shared/types/resolution.ts';
 import { createFileOutput } from '../shared/utils/outputs.ts';
+import { relativePosix } from '../shared/utils/paths.ts';
 import { renderAgentsIndex } from './agents-index.ts';
+import { describeArtifactSource, SETUP_SOURCE } from './describe-source.ts';
 import { buildRuleFileName, renderRuleFile } from './rule-file.ts';
 
 /**
@@ -21,10 +23,11 @@ import { buildRuleFileName, renderRuleFile } from './rule-file.ts';
  * (AGENTS.md, `.agents/`), then the native files of each agent of the project.
  */
 export function planSetup(resolution: Resolution): SetupPlan {
+  const projectDir = resolution.chain.project.dir;
   const index = renderAgentsIndex(resolution);
-  const indexFile = createFileOutput(INSTRUCTIONS_FILE, index);
-  const ruleFiles = resolution.rules.map(planRuleFile);
-  const skillCopies = resolution.skills.flatMap(planSkillCopies);
+  const indexFile = createFileOutput(INSTRUCTIONS_FILE, index, SETUP_SOURCE);
+  const ruleFiles = resolution.rules.map((rule) => planRuleFile(projectDir, rule));
+  const skillCopies = resolution.skills.flatMap((skill) => planSkillCopies(projectDir, skill));
   const outputs: Array<Output> = [indexFile, ...ruleFiles, ...skillCopies];
   const ignoredPaths: Array<string> = [`${AGENTS_DIR}/`];
   const protectedPaths: Array<string> = [INSTRUCTIONS_FILE];
@@ -58,26 +61,32 @@ export function planSetup(resolution: Resolution): SetupPlan {
   };
 }
 
-function planRuleFile(rule: ResolvedArtifact<Rule>): OutputFile {
+function planRuleFile(projectDir: string, rule: ResolvedArtifact<Rule>): OutputFile {
   const fileName = buildRuleFileName(rule);
   const path = `${AGENTS_RULES_DIR}/${fileName}`;
   const content = renderRuleFile(rule);
+  const source = describeArtifactSource(projectDir, rule.origin, rule.artifact.source);
 
-  return createFileOutput(path, content);
+  return createFileOutput(path, content, source);
 }
 
 /** The skill is copied as a whole, with every file of its directory. */
-function planSkillCopies(skill: ResolvedArtifact<Skill>): ReadonlyArray<OutputCopy> {
+function planSkillCopies(
+  projectDir: string,
+  skill: ResolvedArtifact<Skill>,
+): ReadonlyArray<OutputCopy> {
   const sourceDir = join(skill.origin.artifactsDir, skill.artifact.source);
   const outputDir = `${AGENTS_SKILLS_DIR}/${skill.artifact.key}`;
 
   return skill.artifact.files.map((file) => {
     const path = `${outputDir}/${file}`;
     const from = join(sourceDir, file);
+    const source = relativePosix(projectDir, from);
 
     return {
       kind: OutputKind.Copy,
       path,
+      source,
       from,
     };
   });
