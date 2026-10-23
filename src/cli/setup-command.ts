@@ -1,6 +1,6 @@
 import pc from 'picocolors';
-import { TunestraError } from '../errors.ts';
 import { runSetup, type SetupOptions } from '../setup/run-setup.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { SyncPlan } from '../sync/plan-sync.ts';
 
 /** Prints the result for people; an error in the user's input is shown without a stack. */

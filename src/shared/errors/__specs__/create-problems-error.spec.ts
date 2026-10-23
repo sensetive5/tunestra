@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createProblemsError } from '../errors.ts';
+import { createProblemsError } from '../create-problems-error.ts';
 
 describe('createProblemsError', () => {
   it('keeps a single problem as is', () => {

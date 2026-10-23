@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { TunestraError } from '../errors.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { Output } from '../shared/types/output.ts';
 import type { OutputRecord, SetupState } from '../shared/types/state.ts';
 import { PathType } from '../shared/utils/fs.ts';

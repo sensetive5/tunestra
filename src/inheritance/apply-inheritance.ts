@@ -1,5 +1,5 @@
-import { createProblemsError } from '../errors.ts';
 import { ArtifactKind } from '../shared/constants/artifacts.ts';
+import { createProblemsError } from '../shared/errors/create-problems-error.ts';
 import type { Chain } from '../shared/types/chain.ts';
 import type { Resolution } from '../shared/types/resolution.ts';
 import { inheritArtifacts } from './inherit-artifacts.ts';

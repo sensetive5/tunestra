@@ -1,4 +1,5 @@
-import { createProblemsError, TunestraError } from '../../errors.ts';
+import { createProblemsError } from '../errors/create-problems-error.ts';
+import { TunestraError } from '../errors/tunestra-error.ts';
 
 type SettledResults<T extends ReadonlyArray<unknown>> = {
   [K in keyof T]: PromiseSettledResult<T[K]>;

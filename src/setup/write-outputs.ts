@@ -1,7 +1,7 @@
 import { copyFile, mkdir, symlink, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { TunestraError } from '../errors.ts';
 import { OutputKind } from '../shared/constants/output.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { Output, OutputSymlink } from '../shared/types/output.ts';
 import { getPathType, PathType } from '../shared/utils/fs.ts';
 import { mapSettled } from '../shared/utils/settled.ts';

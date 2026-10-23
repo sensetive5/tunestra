@@ -1,5 +1,5 @@
-import { type McpPatch, mcpServerSchema } from '../presets/schema.ts';
-import type { McpServer, Preset } from '../shared/types/preset.ts';
+import { mcpServerSchema } from '../shared/schemas/preset.ts';
+import type { McpPatch, McpServer, Preset } from '../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../shared/types/resolution.ts';
 import { createOrigin, type PatchArtifacts } from './inherit-artifacts.ts';
 import { patchMcpConfig } from './patch-mcp-config.ts';

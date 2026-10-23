@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { parse } from 'yaml';
 import type { z } from 'zod';
-import { TunestraError } from '../../errors.ts';
-import { getErrorMessage } from './errors.ts';
+import { getErrorMessage } from '../errors/get-error-message.ts';
+import { TunestraError } from '../errors/tunestra-error.ts';
 import { validate } from './validate.ts';
 
 /** Parses YAML; an empty document becomes an empty object. `what` names it in the error. */

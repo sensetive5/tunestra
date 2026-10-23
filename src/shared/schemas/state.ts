@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { STATE_VERSION } from '../shared/constants/output.ts';
+import { STATE_VERSION } from '../constants/output.ts';
 
 const fileRecordSchema = z.strictObject({
   hash: z.string(),

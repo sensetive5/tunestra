@@ -1,6 +1,17 @@
-import type { Exclude, McpConfig, Overrides } from '../../presets/schema.ts';
+import type { z } from 'zod';
 import type { Agent } from '../constants/agents.ts';
 import type { Level } from '../constants/levels.ts';
+import type {
+  excludeSchema,
+  mcpPatchSchema,
+  mcpServerSchema,
+  overridesSchema,
+} from '../schemas/preset.ts';
+
+export type Exclude = z.infer<typeof excludeSchema>;
+export type Overrides = z.infer<typeof overridesSchema>;
+export type McpPatch = z.infer<typeof mcpPatchSchema>;
+export type McpConfig = Omit<z.infer<typeof mcpServerSchema>, 'description'>;
 
 /** Paths in artifacts are relative to the preset's artifact directory. */
 export type Rule = {

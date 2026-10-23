@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TunestraError } from '../../../errors.ts';
+import { TunestraError } from '../../errors/tunestra-error.ts';
 import { buildResultsError, getValues, isEveryFulfilled, mapSettled } from '../settled.ts';
 
 describe('isEveryFulfilled', () => {

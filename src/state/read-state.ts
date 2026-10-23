@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { TunestraError } from '../errors.ts';
 import { STATE_FILE, STATE_VERSION } from '../shared/constants/output.ts';
+import { getErrorMessage } from '../shared/errors/get-error-message.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
+import { stateSchema } from '../shared/schemas/state.ts';
 import type { SetupState } from '../shared/types/state.ts';
-import { getErrorMessage } from '../shared/utils/errors.ts';
 import { readFileIfExists } from '../shared/utils/fs.ts';
 import { validate } from '../shared/utils/validate.ts';
-import { stateSchema } from './state-schema.ts';
 
 /** The state of the last setup; a project that never ran setup has an empty one. */
 export async function readState(projectDir: string): Promise<SetupState> {

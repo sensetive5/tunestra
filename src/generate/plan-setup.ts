@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { AGENT_ADAPTERS } from '../agents/adapters.ts';
-import { createProblemsError } from '../errors.ts';
 import { INSTRUCTIONS_FILE } from '../shared/constants/files.ts';
 import {
   AGENTS_DIR,
@@ -9,6 +8,7 @@ import {
   OutputKind,
   STATE_DIR,
 } from '../shared/constants/output.ts';
+import { createProblemsError } from '../shared/errors/create-problems-error.ts';
 import type { Output, OutputCopy, OutputFile, SetupPlan } from '../shared/types/output.ts';
 import type { Rule, Skill } from '../shared/types/preset.ts';
 import type { Resolution, ResolvedArtifact } from '../shared/types/resolution.ts';
