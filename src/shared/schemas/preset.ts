@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { Agent } from '../shared/constants/agents.ts';
-import { PresetLevel } from '../shared/constants/levels.ts';
-import { isString } from '../shared/utils/guards.ts';
+import { Agent } from '../constants/agents.ts';
+import { PresetLevel } from '../constants/levels.ts';
+import { isString } from '../utils/guards.ts';
 
 const keys = z.array(z.string().min(1)).readonly();
 const stringMap = z.record(z.string(), z.string());
@@ -68,21 +68,3 @@ export const mcpServerSchema = z
   .refine((server) => [server.command, server.url].filter(isString).length === 1, {
     message: 'Set either "command" (local server) or "url" (remote server)',
   });
-
-export const ruleFrontmatterSchema = z.looseObject({
-  description: z.string().optional(),
-});
-
-export const skillFrontmatterSchema = z.looseObject({
-  name: skillName.optional(),
-  description: z.string().min(1),
-});
-
-export const commandFrontmatterSchema = z.looseObject({
-  description: z.string().optional(),
-});
-
-export type Exclude = z.infer<typeof excludeSchema>;
-export type Overrides = z.infer<typeof overridesSchema>;
-export type McpPatch = z.infer<typeof mcpPatchSchema>;
-export type McpConfig = Omit<z.infer<typeof mcpServerSchema>, 'description'>;

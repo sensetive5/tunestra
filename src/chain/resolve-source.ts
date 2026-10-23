@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { TunestraError } from '../errors.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
 
 const GIT_SOURCE_PREFIXES = ['github:', 'gitlab:'] as const;
 

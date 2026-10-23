@@ -1,12 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
-import { createProblemsError } from '../../errors.ts';
+import { createProblemsError } from '../../shared/errors/create-problems-error.ts';
+import { skillFrontmatterSchema } from '../../shared/schemas/frontmatter.ts';
+import { skillName } from '../../shared/schemas/preset.ts';
 import type { Skill } from '../../shared/types/preset.ts';
 import { listAllFiles, listFiles } from '../../shared/utils/fs.ts';
 import { mapSettled } from '../../shared/utils/settled.ts';
 import { validate } from '../../shared/utils/validate.ts';
 import { parseFrontmatter } from '../frontmatter.ts';
-import { skillFrontmatterSchema, skillName } from '../schema.ts';
 
 export async function loadSkills(dir: string): Promise<ReadonlyArray<Skill>> {
   const manifests = await listFiles(dir, 'skills/*/SKILL.md');

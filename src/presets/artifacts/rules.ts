@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { INSTRUCTIONS_FILE } from '../../shared/constants/files.ts';
+import { ruleFrontmatterSchema } from '../../shared/schemas/frontmatter.ts';
 import type { Rule } from '../../shared/types/preset.ts';
 import { checkExists, listFiles } from '../../shared/utils/fs.ts';
 import { buildResultsError, isEveryFulfilled, mapSettled } from '../../shared/utils/settled.ts';
 import { validate } from '../../shared/utils/validate.ts';
 import { parseFrontmatter } from '../frontmatter.ts';
-import { ruleFrontmatterSchema } from '../schema.ts';
 
 const INSTRUCTIONS_DESCRIPTION = 'Main instructions of the level';
 
