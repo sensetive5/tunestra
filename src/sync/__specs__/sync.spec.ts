@@ -79,7 +79,7 @@ describe('setup over its own output', () => {
     ]);
   });
 
-  it('keeps an edited file that is no longer generated', async () => {
+  it('removes an edited file that is no longer generated and warns about it', async () => {
     const { root, projectDir } = await setUpProject();
     const styleSource = join(root, 'base/rules/style.md');
     const stylePath = join(projectDir, STYLE_RULE);
@@ -88,11 +88,11 @@ describe('setup over its own output', () => {
 
     const sync = await runSetup(projectDir, WRITE);
 
-    const kept = await readFile(stylePath, 'utf8');
-    expect(kept).toBe('Edited by hand');
-    expect(sync.removals).toEqual([STYLE_RULE_COPY]);
+    const hasStyle = await checkExists(stylePath);
+    expect(hasStyle).toBe(false);
+    expect(sync.removals).toEqual([STYLE_RULE, STYLE_RULE_COPY]);
     expect(sync.warnings).toEqual([
-      `${STYLE_RULE} is no longer generated, but it was edited by hand, so tunestra kept it. Delete it when you no longer need it`,
+      `${STYLE_RULE} is no longer generated and was edited by hand; tunestra removed it`,
     ]);
   });
 

@@ -10,8 +10,9 @@ export type StaleCheck = {
 };
 
 /**
- * A path that the last setup wrote and this one does not. It is removed when it still has
- * what tunestra wrote; an edited file is kept, so that nobody loses their changes.
+ * A path that the last setup wrote and this one does not. Generated files are never kept:
+ * an edited one is removed too, with a warning, so that the lost edit does not go unnoticed.
+ * Only a directory is left alone, because tunestra never writes directories in its place.
  */
 export async function checkStaleOutput(
   projectDir: string,
@@ -21,19 +22,26 @@ export async function checkStaleOutput(
   const fullPath = join(projectDir, path);
   const disk = await inspectPath(fullPath);
   const isMissing = disk.type === PathType.Missing;
+  const isDirectory = disk.type === PathType.Directory;
   const isUnchanged = matchesRecord(disk, record);
 
   if (isMissing) {
     return createStaleCheck(path, false, undefined);
   }
 
+  if (isDirectory) {
+    const warning = `${path} is no longer generated, but it is a directory now, so tunestra left it`;
+
+    return createStaleCheck(path, false, warning);
+  }
+
   if (isUnchanged) {
     return createStaleCheck(path, true, undefined);
   }
 
-  const warning = `${path} is no longer generated, but it was edited by hand, so tunestra kept it. Delete it when you no longer need it`;
+  const warning = `${path} is no longer generated and was edited by hand; tunestra removed it`;
 
-  return createStaleCheck(path, false, warning);
+  return createStaleCheck(path, true, warning);
 }
 
 function createStaleCheck(
