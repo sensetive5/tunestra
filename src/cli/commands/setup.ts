@@ -1,27 +1,29 @@
 import pc from 'picocolors';
-import { runSetup, type SetupOptions } from '../setup/run-setup.ts';
-import { TunestraError } from '../shared/errors/tunestra-error.ts';
-import type { SyncPlan } from '../sync/plan-sync.ts';
+import { runSetup, type SetupOptions } from '../../setup/run-setup.ts';
+import type { SyncPlan } from '../../sync/plan-sync.ts';
+import { describeResolution } from './describe-resolution.ts';
 
-/** Prints the result for people; an error in the user's input is shown without a stack. */
-export async function runSetupCommand(projectDir: string, options: SetupOptions): Promise<void> {
-  try {
-    const sync = await runSetup(projectDir, options);
-    const report = describeSync(sync, options);
+export type SetupCommandOptions = SetupOptions & {
+  /** Also print where every artifact comes from. */
+  verbose: boolean;
+};
 
-    console.log(report);
-  } catch (error) {
-    if (error instanceof TunestraError) {
-      const message = pc.red(error.message);
+export async function describeSetup(
+  projectDir: string,
+  options: SetupCommandOptions,
+): Promise<string> {
+  const report = await runSetup(projectDir, options);
+  const summary = describeSync(report.sync, options);
 
-      console.error(message);
-      process.exitCode = 1;
+  if (options.verbose) {
+    const resolution = describeResolution(report.resolution);
 
-      return;
-    }
+    return `${resolution}
 
-    throw error;
+${summary}`;
   }
+
+  return summary;
 }
 
 function describeSync(sync: SyncPlan, options: SetupOptions): string {

@@ -40,7 +40,7 @@ describe('setup over its own output', () => {
     const styleCopyPath = join(projectDir, STYLE_RULE_COPY);
     await rm(styleSource);
 
-    const sync = await runSetup(projectDir, WRITE);
+    const { sync } = await runSetup(projectDir, WRITE);
 
     const hasStyle = await checkExists(stylePath);
     const hasStyleCopy = await checkExists(styleCopyPath);
@@ -70,7 +70,7 @@ describe('setup over its own output', () => {
     const generated = await readFile(stylePath, 'utf8');
     await writeFile(stylePath, 'Edited by hand');
 
-    const sync = await runSetup(projectDir, WRITE);
+    const { sync } = await runSetup(projectDir, WRITE);
 
     const restored = await readFile(stylePath, 'utf8');
     expect(restored).toBe(generated);
@@ -86,7 +86,7 @@ describe('setup over its own output', () => {
     await writeFile(stylePath, 'Edited by hand');
     await rm(styleSource);
 
-    const sync = await runSetup(projectDir, WRITE);
+    const { sync } = await runSetup(projectDir, WRITE);
 
     const hasStyle = await checkExists(stylePath);
     expect(hasStyle).toBe(false);
@@ -116,7 +116,7 @@ describe('setup over its own output', () => {
     const statePath = join(projectDir, '.tunestra/state/outputs.json');
     await rm(statePath);
 
-    const sync = await runSetup(projectDir, WRITE);
+    const { sync } = await runSetup(projectDir, WRITE);
 
     expect(sync.warnings).toEqual([]);
   });

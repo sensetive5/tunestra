@@ -17,9 +17,9 @@ describe('runSetup', () => {
     const projectDir = join(root, 'project');
     const indexPath = join(projectDir, 'AGENTS.md');
 
-    const plan = await runSetup(projectDir, { dryRun: true });
+    const { sync } = await runSetup(projectDir, { dryRun: true });
 
-    const paths = plan.outputs.map((output) => output.path);
+    const paths = sync.outputs.map((output) => output.path);
     const result = readFile(indexPath, 'utf8');
     expect(paths).toContain('AGENTS.md');
     await expect(result).rejects.toThrow('ENOENT');
