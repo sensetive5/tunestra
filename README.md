@@ -3,8 +3,8 @@
 > Tune your AI agents to play as one orchestra.
 
 > [!WARNING]
-> **Early development.** This README is the specification of the first release (v0.1).
-> It describes the target behavior; not everything is implemented yet.
+> **Early version.** v0.1 supports Claude Code; Codex comes in v0.2. The formats may still
+> change before v1.0.
 
 tunestra gives Claude Code, Codex and other AI coding agents **one shared source** of rules,
 skills, commands and MCP servers, and generates each agent's native configuration from it.
