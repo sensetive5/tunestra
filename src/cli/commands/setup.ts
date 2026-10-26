@@ -1,27 +1,11 @@
 import pc from 'picocolors';
-import { runSetup, type SetupOptions } from '../setup/run-setup.ts';
-import { TunestraError } from '../shared/errors/tunestra-error.ts';
-import type { SyncPlan } from '../sync/plan-sync.ts';
+import { runSetup, type SetupOptions } from '../../setup/run-setup.ts';
+import type { SyncPlan } from '../../sync/plan-sync.ts';
 
-/** Prints the result for people; an error in the user's input is shown without a stack. */
-export async function runSetupCommand(projectDir: string, options: SetupOptions): Promise<void> {
-  try {
-    const sync = await runSetup(projectDir, options);
-    const report = describeSync(sync, options);
+export async function describeSetup(projectDir: string, options: SetupOptions): Promise<string> {
+  const sync = await runSetup(projectDir, options);
 
-    console.log(report);
-  } catch (error) {
-    if (error instanceof TunestraError) {
-      const message = pc.red(error.message);
-
-      console.error(message);
-      process.exitCode = 1;
-
-      return;
-    }
-
-    throw error;
-  }
+  return describeSync(sync, options);
 }
 
 function describeSync(sync: SyncPlan, options: SetupOptions): string {
