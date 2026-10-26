@@ -1,14 +1,17 @@
 import { loadPreset } from '../presets/load-preset.ts';
 import type { Preset, Project } from '../shared/types/preset.ts';
 import { mapSettled } from '../shared/utils/settled.ts';
+import type { SourceResolver } from '../sources/create-source-resolver.ts';
 import type { PresetGraph } from './preset-graph.ts';
-import { resolveSource } from './resolve-source.ts';
 
 /**
  * Loads the presets of the project, then the presets they extend, and so on. Each step loads
  * its presets in parallel; a preset that several levels extend is loaded once.
  */
-export async function loadPresetGraph(project: Project): Promise<PresetGraph> {
+export async function loadPresetGraph(
+  project: Project,
+  resolver: SourceResolver,
+): Promise<PresetGraph> {
   const levels = new Map<string, Preset>();
   const parents = new Map<string, ReadonlyArray<string>>();
   let pending: ReadonlyArray<Preset> = [project];
@@ -19,7 +22,9 @@ export async function loadPresetGraph(project: Project): Promise<PresetGraph> {
     const dirsToLoad = new Set<string>();
 
     for (const preset of pending) {
-      const parentDirs = resolveParents(preset);
+      const parentDirs = await mapSettled(preset.extends, (ref) =>
+        resolver.resolve(ref, preset.dir),
+      );
 
       parents.set(preset.dir, parentDirs);
 
@@ -34,7 +39,7 @@ export async function loadPresetGraph(project: Project): Promise<PresetGraph> {
 
     const dirs = [...dirsToLoad];
 
-    pending = await mapSettled(dirs, loadPreset);
+    pending = await mapSettled(dirs, (dir) => loadRemotePreset(dir, resolver));
 
     for (const preset of pending) {
       levels.set(preset.dir, preset);
@@ -48,6 +53,12 @@ export async function loadPresetGraph(project: Project): Promise<PresetGraph> {
   };
 }
 
-function resolveParents(preset: Preset): ReadonlyArray<string> {
-  return preset.extends.map((ref) => resolveSource(ref, preset.dir));
+async function loadRemotePreset(dir: string, resolver: SourceResolver): Promise<Preset> {
+  const preset = await loadPreset(dir);
+  const remote = resolver.describeRemote(dir);
+
+  return {
+    ...preset,
+    remote,
+  };
 }

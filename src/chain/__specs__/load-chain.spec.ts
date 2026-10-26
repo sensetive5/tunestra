@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { createFakeDownload } from '../../shared/tests/download.ts';
 import { BASIC_INPUT } from '../../shared/tests/fixtures.ts';
 import { createTree } from '../../shared/tests/temp.ts';
 import { loadChain } from '../load-chain.ts';
@@ -94,14 +95,24 @@ describe('loadChain', () => {
     await expect(result).rejects.toThrow('tunestra.preset.yaml is missing');
   });
 
-  it('does not support git sources yet', async () => {
+  it('loads presets from git and keeps their git references', async () => {
     const root = await createTree({
-      'project/tunestra.yaml': 'extends: ["github:<owner>/<repo>/team#v1"]\n',
+      'project/tunestra.yaml': 'extends: ["github:org/presets/team#v1"]\n',
+      'repository/team/tunestra.preset.yaml': 'name: team\nlevel: team\nextends: [../base]\n',
+      'repository/base/tunestra.preset.yaml': 'name: base\nlevel: base\n',
     });
     const projectDir = join(root, 'project');
+    const fake = createFakeDownload({
+      'github:org/presets#v1': join(root, 'repository'),
+    });
 
-    const result = loadChain(projectDir);
+    const chain = await loadChain(projectDir, { download: fake.download });
 
-    await expect(result).rejects.toThrow('Git sources are not supported yet');
+    const remotes = chain.levels.map((level) => level.remote);
+    expect(remotes).toEqual([
+      'github:org/presets/base#v1',
+      'github:org/presets/team#v1',
+      undefined,
+    ]);
   });
 });

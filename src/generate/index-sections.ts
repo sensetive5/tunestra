@@ -84,12 +84,16 @@ export function renderMcpServers(servers: ReadonlyArray<ResolvedArtifact<McpServ
   return renderSection('MCP servers', undefined, table);
 }
 
-/** The project shows its config file; a preset shows its path from the project. */
+/** The project shows its config file; a preset shows its git reference or its path. */
 function describeLevelSource(chain: Chain, level: Preset): string {
   const isProject = level.dir === chain.project.dir;
 
   if (isProject) {
     return PROJECT_CONFIG;
+  }
+
+  if (typeof level.remote === 'string') {
+    return level.remote;
   }
 
   return relativePosix(chain.project.dir, level.dir);

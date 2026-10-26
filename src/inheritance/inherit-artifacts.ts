@@ -59,6 +59,7 @@ export function createOrigin(level: Preset): Origin {
     level: level.level,
     dir: level.dir,
     artifactsDir: level.artifactsDir,
+    remote: level.remote,
   };
 }
 

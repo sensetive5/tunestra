@@ -42,8 +42,7 @@ Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md` and `CLAUDE.md`. Everything el
 tunestra generates is listed in `.gitignore` automatically.
 
 > [!NOTE]
-> `init` and git sources are not ready yet. Until then, create `tunestra.yaml` by hand and
-> point `extends` to presets with a relative path, for example `../presets/team`.
+> `init` is not ready yet. Until then, create `tunestra.yaml` by hand.
 
 ## Principles
 
@@ -108,8 +107,13 @@ overrides: {}
 | GitHub | `github:<owner>/<repo>/<path>#<ref>` |
 | GitLab | `gitlab:<owner>/<repo>/<path>#<ref>` |
 
-Git sources are coming in the next update of v0.1; for now, use relative paths. Pin git
-sources to a tag or commit. Lockfiles and npm sources are planned for v0.3.
+Pin git sources to a tag or commit. tunestra downloads the whole repository at that ref
+into `.tunestra/state/sources/` on every setup, so a preset can extend other presets of its
+repository with a relative path, like `../base`. A relative path cannot leave the repository.
+Git is not needed: repositories are downloaded as archives over HTTPS.
+
+For a private repository, set the `GIGET_AUTH` environment variable to a token with read
+access. Lockfiles and npm sources are planned for v0.3.
 
 ## Inheritance
 

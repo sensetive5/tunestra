@@ -58,6 +58,8 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
   dir: string;
   /** Directory with rules/, skills/, commands/ and mcp/. */
   artifactsDir: string;
+  /** The git reference, when the preset was downloaded: `github:org/presets/team#v1`. */
+  remote: string | undefined;
   extends: ReadonlyArray<string>;
   exclude: Exclude;
   overrides: Overrides;

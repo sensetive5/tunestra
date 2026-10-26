@@ -34,3 +34,6 @@ export const STATE_FILE = `${STATE_DIR}/outputs.json`;
 
 /** Bump when the shape of the state file changes. */
 export const STATE_VERSION = 1;
+
+/** Repositories of git sources, downloaded on every setup. */
+export const SOURCES_DIR = `${STATE_DIR}/sources`;
