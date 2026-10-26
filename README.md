@@ -41,6 +41,10 @@ agents: [claude]
 Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md` and `CLAUDE.md`. Everything else that
 tunestra generates is listed in `.gitignore` automatically.
 
+> [!NOTE]
+> `init` and git sources are not ready yet. Until then, create `tunestra.yaml` by hand and
+> point `extends` to presets with a relative path, for example `../presets/team`.
+
 ## Principles
 
 1. **Sources are the only truth.** Presets and `.tunestra/` are edited by people.
@@ -104,12 +108,17 @@ overrides: {}
 | GitHub | `github:<owner>/<repo>/<path>#<ref>` |
 | GitLab | `gitlab:<owner>/<repo>/<path>#<ref>` |
 
-Pin git sources to a tag or commit. Lockfiles and npm sources are planned for v0.3.
+Git sources are coming in the next update of v0.1; for now, use relative paths. Pin git
+sources to a tag or commit. Lockfiles and npm sources are planned for v0.3.
 
 ## Inheritance
 
 The chain is linearized from general to specific: every preset comes after the presets it
 extends. Each level is applied on top of the accumulated result.
+
+A level can extend a more general level or a level of the same kind: a `team` preset can
+build on another `team` preset. When two presets extend the same preset, it joins the
+chain once, before both of them.
 
 ### Artifact keys
 
@@ -130,8 +139,12 @@ are merged by key (the specific value wins); `command`, `args` and `url` are rep
 
 - a preset extends a more specific level (for example, `base` extends `team`);
 - `extends` contains a cycle;
+- two levels have the same name;
 - a manifest has an unknown field or a missing required field;
-- `exclude` or `overrides` refers to a key that is not inherited.
+- `exclude` or `overrides` refers to a key that is not inherited;
+- after a patch, an MCP server has both `command` and `url`, or neither.
+
+All problems are reported at once, in the order of the files, so you can fix them in one pass.
 
 ## What gets generated (Claude Code)
 
@@ -149,6 +162,9 @@ are merged by key (the specific value wins); `command`, `args` and `url` are rep
 | `.gitignore` | A block between `# >>> tunestra` and `# <<< tunestra` | yes |
 
 `<NN>` orders rules from specific to general: `10` project, `20` team, `30` domain, `40` base.
+Level instructions get the key `instructions`, and the preset name when it differs from the
+level: `20-team-instructions.md`, but `20-team-instructions-frontend.md` for a `team` preset
+named `frontend`.
 
 Every generated rule starts with its origin:
 
@@ -159,18 +175,33 @@ Every generated rule starts with its origin:
 
 Skills and commands are copied as is: their frontmatter must stay on the first line.
 
+## Running setup again
+
+tunestra keeps a list of what it wrote in `.tunestra/state/outputs.json` and compares every
+run with it:
+
+| Situation | What setup does |
+|---|---|
+| A generated file is still needed | Writes it again |
+| A generated file was edited by hand | Writes it again and warns which source file to edit instead |
+| A file is no longer generated (for example, a rule was deleted from a preset) | Removes it and the folders it leaves empty; warns if the file was edited by hand |
+| A file is in the way, and tunestra did not create it | Stops and asks you to move it away |
+| `.tunestra/state/` was deleted | Accepts its own files by their header or content and goes on |
+
+Generated files are never kept because of manual edits: change the sources instead.
+
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `tunestra init` | Creates `tunestra.yaml` and `.tunestra/`. Moves an existing hand-written `AGENTS.md` to `.tunestra/AGENTS.md` and `CLAUDE.md` to `.tunestra/rules/claude-md.md` |
-| `tunestra setup` | Resolves the chain and regenerates every output |
-| `tunestra setup --dry-run` | Prints what would be created, updated or removed |
-| `tunestra setup --verbose` | Also prints where every artifact comes from |
-| `tunestra uninstall` | Removes everything tunestra generated |
+| Command | What it does | Status |
+|---|---|---|
+| `tunestra setup` | Resolves the chain and regenerates every output | ready |
+| `tunestra setup --dry-run` | Prints what would be written or removed, and the warnings | ready |
+| `tunestra init` | Creates `tunestra.yaml` and `.tunestra/`. Moves an existing hand-written `AGENTS.md` to `.tunestra/AGENTS.md` and `CLAUDE.md` to `.tunestra/rules/claude-md.md` | planned |
+| `tunestra setup --verbose` | Also prints where every artifact comes from | planned |
+| `tunestra uninstall` | Removes everything tunestra generated | planned |
 
 `tunestra setup` refuses to overwrite an `AGENTS.md` or `CLAUDE.md` that it did not generate
-and asks you to run `tunestra init` first.
+and tells you where to move their text.
 
 ## Roadmap
 

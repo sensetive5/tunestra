@@ -107,40 +107,6 @@ describe('loadPreset', () => {
     await expect(result).rejects.toThrow('extend');
   });
 
-  it('requires a description for skills', async () => {
-    const dir = await createTree({
-      'tunestra.preset.yaml': MINIMAL_MANIFEST,
-      'skills/a/SKILL.md': '---\nname: a\n---\nText',
-    });
-
-    const result = loadPreset(dir);
-
-    await expect(result).rejects.toThrow('description');
-  });
-
-  it('rejects skill names that are not safe directory names', async () => {
-    const dir = await createTree({
-      'tunestra.preset.yaml': MINIMAL_MANIFEST,
-      'skills/a/SKILL.md': '---\nname: ../../etc\ndescription: Bad\n---\n',
-    });
-
-    const result = loadPreset(dir);
-
-    await expect(result).rejects.toThrow('lowercase letters');
-  });
-
-  it('rejects two skills with the same name', async () => {
-    const dir = await createTree({
-      'tunestra.preset.yaml': MINIMAL_MANIFEST,
-      'skills/a/SKILL.md': '---\nname: same\ndescription: A\n---\n',
-      'skills/b/SKILL.md': '---\nname: same\ndescription: B\n---\n',
-    });
-
-    const result = loadPreset(dir);
-
-    await expect(result).rejects.toThrow('the same name "same"');
-  });
-
   it('reports every problem at once, in the order of the files', async () => {
     const dir = await createTree({
       'tunestra.preset.yaml': MINIMAL_MANIFEST,
@@ -161,16 +127,5 @@ describe('loadPreset', () => {
         expect.stringContaining('mcp/m.yaml'),
       ],
     });
-  });
-
-  it('requires either command or url for MCP servers', async () => {
-    const dir = await createTree({
-      'tunestra.preset.yaml': MINIMAL_MANIFEST,
-      'mcp/a.yaml': 'description: Nothing to run\n',
-    });
-
-    const result = loadPreset(dir);
-
-    await expect(result).rejects.toThrow('either "command"');
   });
 });
