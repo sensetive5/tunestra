@@ -10,6 +10,8 @@ export type Origin = {
   dir: string;
   /** Directory with the level's artifacts; `source` paths of artifacts are relative to it. */
   artifactsDir: string;
+  /** The git reference of the level, when it was downloaded. */
+  remote: string | undefined;
 };
 
 /**

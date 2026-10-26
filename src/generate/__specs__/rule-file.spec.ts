@@ -8,6 +8,7 @@ const TEAM: Origin = {
   level: 'team',
   dir: '/presets/team',
   artifactsDir: '/presets/team',
+  remote: undefined,
 };
 
 const BASE: Origin = {
@@ -15,6 +16,7 @@ const BASE: Origin = {
   level: 'base',
   dir: '/presets/base',
   artifactsDir: '/presets/base',
+  remote: undefined,
 };
 
 function createRule(

@@ -30,6 +30,7 @@ export async function loadProject(dir: string): Promise<Project> {
     description: undefined,
     dir: root,
     artifactsDir,
+    remote: undefined,
     ...artifacts,
   };
 }

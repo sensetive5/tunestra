@@ -25,6 +25,7 @@ export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
     description: manifest.description,
     dir: root,
     artifactsDir: root,
+    remote: undefined,
     ...artifacts,
   };
 }
