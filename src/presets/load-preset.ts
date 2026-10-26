@@ -1,12 +1,12 @@
 import { join, resolve } from 'node:path';
-import { TunestraError } from '../errors.ts';
 import { PRESET_MANIFEST } from '../shared/constants/files.ts';
 import type { PresetLevel } from '../shared/constants/levels.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
+import { presetManifestSchema } from '../shared/schemas/preset.ts';
 import type { Preset } from '../shared/types/preset.ts';
 import { checkExists } from '../shared/utils/fs.ts';
 import { readYaml } from '../shared/utils/yaml.ts';
 import { loadArtifacts } from './artifacts/load-artifacts.ts';
-import { presetManifestSchema } from './schema.ts';
 
 export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
   const root = resolve(dir);

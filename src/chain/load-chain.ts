@@ -1,5 +1,5 @@
-import { createProblemsError } from '../errors.ts';
 import { loadProject } from '../presets/load-project.ts';
+import { createProblemsError } from '../shared/errors/create-problems-error.ts';
 import type { Chain } from '../shared/types/chain.ts';
 import { findDuplicateNames, findLevelProblems } from './check-chain.ts';
 import { linearizeChain } from './linearize-chain.ts';

@@ -1,22 +1,25 @@
 import type { OutputKind } from '../constants/output.ts';
 
-/** Paths are relative to the project directory. */
-export type OutputFile = {
-  kind: typeof OutputKind.File;
+/**
+ * `path` is relative to the project directory. `source` tells people what to edit instead
+ * of the generated file, for example `../presets/team/rules/code-style.md`.
+ */
+type OutputBase<TKind extends OutputKind> = {
+  kind: TKind;
   path: string;
+  source: string;
+};
+
+export type OutputFile = OutputBase<typeof OutputKind.File> & {
   content: string;
 };
 
-export type OutputCopy = {
-  kind: typeof OutputKind.Copy;
-  path: string;
+export type OutputCopy = OutputBase<typeof OutputKind.Copy> & {
   /** Absolute path of the source file. */
   from: string;
 };
 
-export type OutputSymlink = {
-  kind: typeof OutputKind.Symlink;
-  path: string;
+export type OutputSymlink = OutputBase<typeof OutputKind.Symlink> & {
   /** Relative to the directory of the link. */
   target: string;
 };

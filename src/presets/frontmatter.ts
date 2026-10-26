@@ -1,4 +1,4 @@
-import { TunestraError } from '../errors.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { Frontmatter } from '../shared/types/frontmatter.ts';
 import { isKeyValueMap } from '../shared/utils/guards.ts';
 import { parseYaml } from '../shared/utils/yaml.ts';

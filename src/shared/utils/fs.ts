@@ -16,7 +16,7 @@ export async function checkExists(path: string): Promise<boolean> {
   }
 }
 
-function isMissingPathError(error: unknown): error is NodeJS.ErrnoException {
+export function isMissingPathError(error: unknown): error is NodeJS.ErrnoException {
   if (error instanceof Error) {
     return 'code' in error && error.code === 'ENOENT';
   }
@@ -52,7 +52,8 @@ export async function listAllFiles(dir: string): Promise<ReadonlyArray<string>> 
 export const PathType = {
   Missing: 'missing',
   Symlink: 'symlink',
-  Other: 'other',
+  Directory: 'directory',
+  File: 'file',
 } as const;
 
 export type PathType = (typeof PathType)[keyof typeof PathType];
@@ -61,12 +62,17 @@ export async function getPathType(path: string): Promise<PathType> {
   try {
     const stats = await lstat(path);
     const isSymlink = stats.isSymbolicLink();
+    const isDirectory = stats.isDirectory();
 
     if (isSymlink) {
       return PathType.Symlink;
     }
 
-    return PathType.Other;
+    if (isDirectory) {
+      return PathType.Directory;
+    }
+
+    return PathType.File;
   } catch (error) {
     if (isMissingPathError(error)) {
       return PathType.Missing;

@@ -1,4 +1,4 @@
-import type { McpConfig, McpPatch } from '../presets/schema.ts';
+import type { McpConfig, McpPatch } from '../shared/types/preset.ts';
 import { mergeRecords } from '../shared/utils/records.ts';
 
 /** `env` and `headers` are merged by key; `command`, `args` and `url` are replaced. */

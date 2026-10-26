@@ -1,12 +1,12 @@
 import { basename, join, resolve } from 'node:path';
-import { TunestraError } from '../errors.ts';
 import { PROJECT_CONFIG, PROJECT_DIR } from '../shared/constants/files.ts';
 import { Level } from '../shared/constants/levels.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
+import { projectConfigSchema } from '../shared/schemas/preset.ts';
 import type { Project } from '../shared/types/preset.ts';
 import { checkExists } from '../shared/utils/fs.ts';
 import { readYaml } from '../shared/utils/yaml.ts';
 import { loadArtifacts } from './artifacts/load-artifacts.ts';
-import { projectConfigSchema } from './schema.ts';
 
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);
