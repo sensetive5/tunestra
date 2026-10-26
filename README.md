@@ -1,5 +1,11 @@
 # tunestra
 
+[![CI](https://github.com/sensetive5/tunestra/actions/workflows/ci.yml/badge.svg)](https://github.com/sensetive5/tunestra/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/sensetive5/tunestra/graph/badge.svg)](https://codecov.io/gh/sensetive5/tunestra)
+[![npm](https://img.shields.io/npm/v/tunestra)](https://www.npmjs.com/package/tunestra)
+[![Node](https://img.shields.io/node/v/tunestra)](package.json)
+[![License: MIT](https://img.shields.io/github/license/sensetive5/tunestra)](LICENSE)
+
 > Tune your AI agents to play as one orchestra.
 
 > [!WARNING]
