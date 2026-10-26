@@ -34,3 +34,24 @@ export function updateGitignore(existing: string | undefined, block: string): st
 
   return `${content}\n\n${block}\n`;
 }
+
+/** Removes the tunestra block and the empty lines around it; other lines stay as they are. */
+export function removeGitignoreBlock(existing: string): string {
+  const start = existing.indexOf(BLOCK_START_PREFIX);
+  const end = existing.indexOf(BLOCK_END);
+  const hasBlock = start >= 0 && end > start;
+
+  if (hasBlock === false) {
+    return existing;
+  }
+
+  const before = existing.slice(0, start).trimEnd();
+  const after = existing.slice(end + BLOCK_END.length).trim();
+  const parts = [before, after].filter((part) => part.length > 0);
+
+  if (parts.length === 0) {
+    return '';
+  }
+
+  return `${parts.join('\n\n')}\n`;
+}

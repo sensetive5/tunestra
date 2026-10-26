@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderGitignoreBlock, updateGitignore } from '../gitignore.ts';
+import { removeGitignoreBlock, renderGitignoreBlock, updateGitignore } from '../gitignore.ts';
 
 const BLOCK = renderGitignoreBlock(['.agents/', '.mcp.json']);
 
@@ -39,5 +39,31 @@ describe('updateGitignore', () => {
     const content = updateGitignore(existing, BLOCK);
 
     expect(content).toBe(`dist/\n\n${BLOCK}\n\n*.log\n`);
+  });
+});
+
+describe('removeGitignoreBlock', () => {
+  it('removes the block and keeps the lines around it', () => {
+    const existing = `dist/\n\n${BLOCK}\n\n*.log\n`;
+
+    const content = removeGitignoreBlock(existing);
+
+    expect(content).toBe('dist/\n\n*.log\n');
+  });
+
+  it('leaves nothing when the file had only the block', () => {
+    const existing = `${BLOCK}\n`;
+
+    const content = removeGitignoreBlock(existing);
+
+    expect(content).toBe('');
+  });
+
+  it('does not change a file without the block', () => {
+    const existing = 'node_modules/\n';
+
+    const content = removeGitignoreBlock(existing);
+
+    expect(content).toBe(existing);
   });
 });

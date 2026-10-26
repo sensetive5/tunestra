@@ -3,6 +3,7 @@ import { Command } from '@commander-js/extra-typings';
 import { VERSION } from '../index.ts';
 import { describeInit } from './commands/init.ts';
 import { describeSetup } from './commands/setup.ts';
+import { describeUninstall } from './commands/uninstall.ts';
 import { runCommand } from './run-command.ts';
 
 const program = new Command()
@@ -31,6 +32,16 @@ program
     const projectDir = process.cwd();
 
     await runCommand(() => describeSetup(projectDir, options));
+  });
+
+program
+  .command('uninstall')
+  .description('Remove everything tunestra generated; tunestra.yaml and .tunestra/ stay')
+  .option('--dry-run', 'show what would be removed without removing it', false)
+  .action(async (options) => {
+    const projectDir = process.cwd();
+
+    await runCommand(() => describeUninstall(projectDir, options));
   });
 
 await program.parseAsync();
