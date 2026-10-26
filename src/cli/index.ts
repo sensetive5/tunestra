@@ -28,6 +28,7 @@ program
   .command('setup')
   .description('Generate agent configuration from tunestra.yaml and its presets')
   .option('--dry-run', 'show the plan without writing files', false)
+  .option('-v, --verbose', 'show where every artifact comes from', false)
   .action(async (options) => {
     const projectDir = process.cwd();
 

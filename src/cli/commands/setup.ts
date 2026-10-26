@@ -1,11 +1,29 @@
 import pc from 'picocolors';
 import { runSetup, type SetupOptions } from '../../setup/run-setup.ts';
 import type { SyncPlan } from '../../sync/plan-sync.ts';
+import { describeResolution } from './describe-resolution.ts';
 
-export async function describeSetup(projectDir: string, options: SetupOptions): Promise<string> {
-  const sync = await runSetup(projectDir, options);
+export type SetupCommandOptions = SetupOptions & {
+  /** Also print where every artifact comes from. */
+  verbose: boolean;
+};
 
-  return describeSync(sync, options);
+export async function describeSetup(
+  projectDir: string,
+  options: SetupCommandOptions,
+): Promise<string> {
+  const report = await runSetup(projectDir, options);
+  const summary = describeSync(report.sync, options);
+
+  if (options.verbose) {
+    const resolution = describeResolution(report.resolution);
+
+    return `${resolution}
+
+${summary}`;
+  }
+
+  return summary;
 }
 
 function describeSync(sync: SyncPlan, options: SetupOptions): string {

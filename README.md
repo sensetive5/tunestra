@@ -26,11 +26,11 @@ specific one wins.
 ## Quick start
 
 ```sh
-npx tunestra init     # creates tunestra.yaml and .tunestra/
+npx tunestra init --extends github:<organisation_name>/<presets_repo>/team#v1
 npx tunestra setup    # generates AGENTS.md, CLAUDE.md, .claude/, .agents/, .mcp.json
 ```
 
-`tunestra.yaml`:
+`init` creates `tunestra.yaml`:
 
 ```yaml
 extends:
@@ -40,9 +40,6 @@ agents: [claude]
 
 Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md` and `CLAUDE.md`. Everything else that
 tunestra generates is listed in `.gitignore` automatically.
-
-> [!NOTE]
-> `init` is not ready yet. Until then, create `tunestra.yaml` by hand.
 
 ## Principles
 
@@ -196,13 +193,13 @@ Generated files are never kept because of manual edits: change the sources inste
 
 ## Commands
 
-| Command | What it does | Status |
-|---|---|---|
-| `tunestra setup` | Resolves the chain and regenerates every output | ready |
-| `tunestra setup --dry-run` | Prints what would be written or removed, and the warnings | ready |
-| `tunestra init` | Creates `tunestra.yaml` and `.tunestra/`. Moves an existing hand-written `AGENTS.md` to `.tunestra/AGENTS.md` and `CLAUDE.md` to `.tunestra/rules/claude-md.md` | planned |
-| `tunestra setup --verbose` | Also prints where every artifact comes from | planned |
-| `tunestra uninstall` | Removes everything tunestra generated | planned |
+| Command | What it does |
+|---|---|
+| `tunestra init` | Creates `tunestra.yaml`; `--extends <presets...>` fills `extends`. Moves a hand-written `AGENTS.md` to `.tunestra/AGENTS.md` and a `CLAUDE.md` with its own text to `.tunestra/rules/claude-md.md`; a `CLAUDE.md` that only imports `AGENTS.md` is removed |
+| `tunestra setup` | Resolves the chain and regenerates every output |
+| `tunestra setup --dry-run` | Prints what would be written or removed, and the warnings |
+| `tunestra setup --verbose` | Also prints where every artifact comes from and what it overrides |
+| `tunestra uninstall` | Removes everything tunestra generated and its block in `.gitignore`; `tunestra.yaml` and `.tunestra/` stay. `--dry-run` shows the list first |
 
 `tunestra setup` refuses to overwrite an `AGENTS.md` or `CLAUDE.md` that it did not generate
 and tells you where to move their text.
