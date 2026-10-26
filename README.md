@@ -112,8 +112,8 @@ into `.tunestra/state/sources/` on every setup, so a preset can extend other pre
 repository with a relative path, like `../base`. A relative path cannot leave the repository.
 Git is not needed: repositories are downloaded as archives over HTTPS.
 
-For a private repository, set the `GIGET_AUTH` environment variable to a token with read
-access. Lockfiles and npm sources are planned for v0.3.
+For a private repository, set the `TUNESTRA_GIT_TOKEN` environment variable to a token with
+read access. Lockfiles and npm sources are planned for v0.3.
 
 ## Inheritance
 

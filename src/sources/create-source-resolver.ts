@@ -3,7 +3,7 @@ import { SOURCES_DIR } from '../shared/constants/output.ts';
 import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { DownloadRepository, GitSource } from '../shared/types/source.ts';
 import { toPosixPath } from '../shared/utils/paths.ts';
-import { downloadWithGiget } from './download-with-giget.ts';
+import { downloadRepository } from './download-repository.ts';
 import { describeGitSource, describeRepository, parseGitSource } from './parse-git-source.ts';
 
 /** Turns references from `extends` into directories, downloading git sources when needed. */
@@ -20,7 +20,7 @@ type Repository = {
 
 export function createSourceResolver(
   projectDir: string,
-  download: DownloadRepository = downloadWithGiget,
+  download: DownloadRepository = downloadRepository,
 ): SourceResolver {
   const downloads = new Map<string, Promise<Repository>>();
   const repositories: Array<Repository> = [];
