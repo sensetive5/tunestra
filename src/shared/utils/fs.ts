@@ -1,4 +1,4 @@
-import { lstat, readFile, stat } from 'node:fs/promises';
+import { lstat, readdir, readFile, rmdir, stat } from 'node:fs/promises';
 import { glob } from 'tinyglobby';
 
 /** A missing path is `false`; any other failure, like no permission, is thrown. */
@@ -89,6 +89,24 @@ export async function readFileIfExists(path: string): Promise<string | undefined
   } catch (error) {
     if (isMissingPathError(error)) {
       return undefined;
+    }
+
+    throw error;
+  }
+}
+
+/** Removes a directory only when it has nothing inside; a missing directory is fine too. */
+export async function removeDirIfEmpty(dir: string): Promise<void> {
+  try {
+    const entries = await readdir(dir);
+    const isEmpty = entries.length === 0;
+
+    if (isEmpty) {
+      await rmdir(dir);
+    }
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return;
     }
 
     throw error;

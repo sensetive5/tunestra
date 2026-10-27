@@ -38,6 +38,21 @@ describe('runUninstall', () => {
     expect(tunestraEntries).toEqual(['rules']);
   });
 
+  it('removes .tunestra/ when the project has no sources in it', async () => {
+    const root = await createTree({
+      'project/tunestra.yaml': 'extends: [../base]\n',
+      'base/tunestra.preset.yaml': 'name: base\nlevel: base\n',
+      'base/rules/security.md': '# Security\n',
+    });
+    const projectDir = join(root, 'project');
+    await runSetup(projectDir, { dryRun: false });
+
+    await runUninstall(projectDir, { dryRun: false });
+
+    const entries = await readdir(projectDir);
+    expect(entries).toEqual(['tunestra.yaml']);
+  });
+
   it('keeps the other lines of .gitignore', async () => {
     const projectDir = await setUpProject({
       'project/.gitignore': 'node_modules/\n',
