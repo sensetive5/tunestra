@@ -1,6 +1,8 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { PROJECT_DIR } from '../shared/constants/files.ts';
 import { STATE_DIR } from '../shared/constants/output.ts';
+import { removeDirIfEmpty } from '../shared/utils/fs.ts';
 import { isString } from '../shared/utils/guards.ts';
 import { mapSettled } from '../shared/utils/settled.ts';
 import { readState } from '../state/read-state.ts';
@@ -43,6 +45,7 @@ export async function runUninstall(
   }
 
   const stateDir = join(projectDir, STATE_DIR);
+  const tunestraDir = join(projectDir, PROJECT_DIR);
 
   await removeOutputs(projectDir, removals);
   await removeGitignoreBlockFile(projectDir);
@@ -50,6 +53,8 @@ export async function runUninstall(
     recursive: true,
     force: true,
   });
+  // Setup creates .tunestra/ for its state; without the user's sources it is not needed.
+  await removeDirIfEmpty(tunestraDir);
 
   return {
     removals,
