@@ -1,6 +1,6 @@
 {
   "name": "tunestra",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tune your AI agents to play as one orchestra: one source of rules, skills, commands and MCP servers for Claude Code, Codex and more.",
   "keywords": [
     "ai",
