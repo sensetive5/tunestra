@@ -44,7 +44,13 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
-    "prepublishOnly": "npm run check"
+    "prepublishOnly": "npm run check",
+    "changeset": "changeset",
+    "version-packages": "changeset version && npm install --package-lock-only",
+    "release": "changeset publish"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=22.18"
@@ -60,6 +66,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
+    "@changesets/cli": "^3.0.3",
     "@types/node": "^22.20.5",
     "@vitest/coverage-v8": "^5.0.5",
     "tsdown": "^0.23.1",
