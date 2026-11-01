@@ -33,4 +33,6 @@ export type SetupPlan = {
   ignoredPaths: ReadonlyArray<string>;
   /** Files that people may have written by hand; setup must not overwrite those. */
   protectedPaths: ReadonlyArray<string>;
+  /** Hints for people about what the agent needs or what it cannot use. */
+  notes: ReadonlyArray<string>;
 };

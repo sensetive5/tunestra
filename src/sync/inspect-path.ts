@@ -1,5 +1,5 @@
 import { readFile, readlink } from 'node:fs/promises';
-import { GENERATED_MARKER } from '../shared/constants/output.ts';
+import { GENERATED_MARKERS } from '../shared/constants/output.ts';
 import type { OutputRecord } from '../shared/types/state.ts';
 import { getPathType, PathType } from '../shared/utils/fs.ts';
 import { hashContent } from '../shared/utils/hash.ts';
@@ -12,7 +12,7 @@ export type DiskEntry =
   | {
       type: typeof PathType.File;
       hash: string;
-      /** The file starts with the marker of generated markdown files. */
+      /** The file starts with one of the markers of generated files. */
       isMarked: boolean;
     }
   | {
@@ -38,8 +38,7 @@ export async function inspectPath(path: string): Promise<DiskEntry> {
   if (type === PathType.File) {
     const content = await readFile(path);
     const hash = hashContent(content);
-    const start = content.subarray(0, GENERATED_MARKER.length);
-    const isMarked = start.toString('utf8') === GENERATED_MARKER;
+    const isMarked = hasGeneratedMarker(content);
 
     return {
       type,
@@ -51,6 +50,14 @@ export async function inspectPath(path: string): Promise<DiskEntry> {
   return {
     type,
   };
+}
+
+function hasGeneratedMarker(content: Buffer): boolean {
+  return GENERATED_MARKERS.some((marker) => {
+    const start = content.subarray(0, marker.length);
+
+    return start.toString('utf8') === marker;
+  });
 }
 
 /** A file matches a record by its hash, a symlink by its target. */

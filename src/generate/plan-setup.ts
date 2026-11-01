@@ -31,6 +31,7 @@ export function planSetup(resolution: Resolution): SetupPlan {
   const outputs: Array<Output> = [indexFile, ...ruleFiles, ...skillCopies];
   const ignoredPaths: Array<string> = [`${AGENTS_DIR}/`];
   const protectedPaths: Array<string> = [INSTRUCTIONS_FILE];
+  const notes: Array<string> = [];
 
   const context = {
     resolution,
@@ -44,6 +45,7 @@ export function planSetup(resolution: Resolution): SetupPlan {
     outputs.push(...agentPlan.outputs);
     ignoredPaths.push(...agentPlan.ignoredPaths);
     protectedPaths.push(...agentPlan.protectedPaths);
+    notes.push(...agentPlan.notes);
   }
 
   ignoredPaths.push(`${STATE_DIR}/`);
@@ -58,6 +60,7 @@ export function planSetup(resolution: Resolution): SetupPlan {
     outputs,
     ignoredPaths,
     protectedPaths,
+    notes,
   };
 }
 

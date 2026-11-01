@@ -57,6 +57,7 @@ describe('loadPreset', () => {
         source: 'commands/release-notes.md',
         description: 'Draft release notes from merged changes',
         content: expect.stringContaining('---\ndescription:'),
+        body: 'Draft release notes for the changes merged since the last tag.\n',
       },
     ]);
   });

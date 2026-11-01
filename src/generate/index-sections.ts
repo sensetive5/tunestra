@@ -12,7 +12,7 @@ const HIERARCHY_INTRO =
   'Instructions are ordered from specific to general. When two instructions conflict, follow the one from the higher level in this list.';
 
 const RULES_INTRO =
-  'Always follow these rules. Claude Code loads them automatically; other agents should read them before starting work.';
+  'Always follow these rules. Claude Code and Codex load them automatically; other agents should read them before starting work.';
 
 const SKILLS_INTRO = 'Use a skill when the task matches its description.';
 
@@ -60,7 +60,11 @@ export function renderSkills(skills: ReadonlyArray<ResolvedArtifact<Skill>>): st
   return renderSection('Skills', SKILLS_INTRO, table);
 }
 
-export function renderCommands(commands: ReadonlyArray<ResolvedArtifact<Command>>): string {
+/** Codex has no project commands; tunestra gives it each command as a skill. */
+export function renderCommands(
+  commands: ReadonlyArray<ResolvedArtifact<Command>>,
+  hasCodex: boolean,
+): string {
   const rows = commands.map((command) => {
     const origin = describeOrigin(command);
     const description = command.artifact.description ?? '';
@@ -68,6 +72,14 @@ export function renderCommands(commands: ReadonlyArray<ResolvedArtifact<Command>
     return [`/${command.artifact.key}`, origin, description];
   });
   const table = renderTable(['Command', 'Level', 'Description'], rows);
+
+  const example = commands.at(0)?.artifact.key;
+
+  if (hasCodex && typeof example === 'string') {
+    const intro = `In Codex, a command is a skill with the same name: call it with \`$\` and the name, for example \`$${example}\`.`;
+
+    return renderSection('Commands', intro, table);
+  }
 
   return renderSection('Commands', undefined, table);
 }

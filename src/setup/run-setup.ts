@@ -1,6 +1,7 @@
 import { loadChain } from '../chain/load-chain.ts';
 import { planSetup } from '../generate/plan-setup.ts';
 import { applyInheritance } from '../inheritance/apply-inheritance.ts';
+import type { SetupPlan } from '../shared/types/output.ts';
 import type { Resolution } from '../shared/types/resolution.ts';
 import { readState } from '../state/read-state.ts';
 import { applySync } from '../sync/apply-sync.ts';
@@ -9,6 +10,7 @@ import { updateGitignoreFile } from './update-gitignore-file.ts';
 
 export type SetupReport = {
   resolution: Resolution;
+  plan: SetupPlan;
   sync: SyncPlan;
 };
 
@@ -30,6 +32,7 @@ export async function runSetup(projectDir: string, options: SetupOptions): Promi
 
   const report = {
     resolution,
+    plan,
     sync,
   };
 

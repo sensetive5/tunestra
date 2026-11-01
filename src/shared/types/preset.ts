@@ -37,6 +37,8 @@ export type Command = {
   description: string | undefined;
   /** The whole file, frontmatter included: agents read it. */
   content: string;
+  /** Command text without frontmatter. */
+  body: string;
 };
 
 export type McpServer = {

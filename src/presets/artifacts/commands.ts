@@ -16,7 +16,7 @@ export async function loadCommands(dir: string): Promise<ReadonlyArray<Command>>
 async function loadCommand(dir: string, source: string): Promise<Command> {
   const file = join(dir, source);
   const content = await readFile(file, 'utf8');
-  const { data } = parseFrontmatter(content, file);
+  const { data, body } = parseFrontmatter(content, file);
   const frontmatter = validate(data, commandFrontmatterSchema, `frontmatter in ${file}`);
 
   const key = basename(source, '.md');
@@ -26,5 +26,6 @@ async function loadCommand(dir: string, source: string): Promise<Command> {
     source,
     description: frontmatter.description,
     content,
+    body,
   };
 }
