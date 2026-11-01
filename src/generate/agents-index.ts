@@ -1,4 +1,3 @@
-import { Agent } from '../shared/constants/agents.ts';
 import { GENERATED_NOTICE } from '../shared/constants/output.ts';
 import type { Resolution } from '../shared/types/resolution.ts';
 import {
@@ -37,8 +36,7 @@ export function renderAgentsIndex(resolution: Resolution): string {
   }
 
   if (hasCommands) {
-    const hasCodex = resolution.chain.project.agents.includes(Agent.Codex);
-    const commands = renderCommands(resolution.commands, hasCodex);
+    const commands = renderCommands(resolution.commands, resolution.chain.project.agents);
 
     sections.push(commands);
   }

@@ -36,7 +36,7 @@ Use a skill when the task matches its description.
 
 ## Commands
 
-In Codex, a command is a skill with the same name: call it with `$` and the name, for example `$release-notes`.
+In Codex, a command is a skill with the same name: call it as `$<name>`.
 
 | Command | Level | Description |
 |---|---|---|
