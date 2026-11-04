@@ -58,6 +58,49 @@ describe('codexAdapter', () => {
     );
   });
 
+  it('gives Codex a local MCP server', async () => {
+    const root = await createTree({
+      ...PROJECT,
+      'base/mcp/memory.yaml': 'command: npx\nargs: [-y, memory]\n',
+    });
+    const projectDir = join(root, 'project');
+    const configPath = join(projectDir, '.codex/config.toml');
+
+    await runSetup(projectDir, { dryRun: false });
+
+    const config = await readFile(configPath, 'utf8');
+    expect(config).toContain('[mcp_servers.memory]\ncommand = "npx"');
+  });
+
+  it('describes a command without a description by its name', async () => {
+    const root = await createTree({
+      ...PROJECT,
+      'base/commands/hello.md': 'Say hello.\n',
+    });
+    const projectDir = join(root, 'project');
+    const skillPath = join(projectDir, '.agents/skills/hello/SKILL.md');
+
+    await runSetup(projectDir, { dryRun: false });
+
+    const skill = await readFile(skillPath, 'utf8');
+    expect(skill).toBe('---\nname: hello\ndescription: The /hello command\n---\nSay hello.\n');
+  });
+
+  it('stops when a command and a skill have the same name', async () => {
+    const root = await createTree({
+      ...PROJECT,
+      'base/commands/review.md': 'Review.\n',
+      'base/skills/review/SKILL.md': '---\nname: review\ndescription: Review code\n---\n',
+    });
+    const projectDir = join(root, 'project');
+
+    const result = runSetup(projectDir, { dryRun: true });
+
+    await expect(result).rejects.toThrow(
+      'Two generated files have the same path: .agents/skills/review/SKILL.md',
+    );
+  });
+
   it('skips an SSE server, because Codex does not support it', async () => {
     const root = await createTree({
       ...PROJECT,
