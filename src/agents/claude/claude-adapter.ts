@@ -55,6 +55,7 @@ function planClaude(context: AgentPlanContext): SetupPlan {
     outputs,
     ignoredPaths: [`${RULES_DIR}/`, `${SKILLS_DIR}/`, `${COMMANDS_DIR}/`, MCP_FILE],
     protectedPaths: [CLAUDE_FILE],
+    notes: [],
   };
 }
 

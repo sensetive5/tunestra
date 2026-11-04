@@ -1,0 +1,9 @@
+# >>> tunestra (generated, do not edit)
+/.agents/
+/.claude/rules/tunestra/
+/.claude/skills/
+/.claude/commands/
+/.mcp.json
+/.codex/config.toml
+/.tunestra/state/
+# <<< tunestra

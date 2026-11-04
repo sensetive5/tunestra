@@ -36,7 +36,7 @@ export function renderAgentsIndex(resolution: Resolution): string {
   }
 
   if (hasCommands) {
-    const commands = renderCommands(resolution.commands);
+    const commands = renderCommands(resolution.commands, resolution.chain.project.agents);
 
     sections.push(commands);
   }

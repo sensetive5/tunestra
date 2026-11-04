@@ -9,8 +9,8 @@
 > Tune your AI agents to play as one orchestra.
 
 > [!WARNING]
-> **Early version.** v0.1 supports Claude Code; Codex comes in v0.2. The formats may still
-> change before v1.0.
+> **Early version.** tunestra supports Claude Code and Codex. The formats may still change
+> before v1.0.
 
 tunestra gives Claude Code, Codex and other AI coding agents **one shared source** of rules,
 skills, commands and MCP servers, and generates each agent's native configuration from it.
@@ -33,7 +33,7 @@ specific one wins.
 
 ```sh
 npx tunestra init --extends github:<organisation_name>/<presets_repo>/team#v1
-npx tunestra setup    # generates AGENTS.md, CLAUDE.md, .claude/, .agents/, .mcp.json
+npx tunestra setup    # generates AGENTS.md and the configuration of every agent
 ```
 
 `init` creates `tunestra.yaml`:
@@ -41,7 +41,7 @@ npx tunestra setup    # generates AGENTS.md, CLAUDE.md, .claude/, .agents/, .mcp
 ```yaml
 extends:
   - github:<organisation_name>/<presets_repo>/team#v1
-agents: [claude]
+agents: [claude]            # add codex: [claude, codex]
 ```
 
 Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md` and `CLAUDE.md`. Everything else that
@@ -97,7 +97,7 @@ as a preset.
 name: my-service            # optional, defaults to the directory name
 extends:
   - ../presets/team
-agents: [claude]            # v0.1 supports claude
+agents: [claude, codex]     # claude, codex; defaults to [claude]
 exclude: {}
 overrides: {}
 ```
@@ -116,7 +116,7 @@ repository with a relative path, like `../base`. A relative path cannot leave th
 Git is not needed: repositories are downloaded as archives over HTTPS.
 
 For a private repository, set the `TUNESTRA_GIT_TOKEN` environment variable to a token with
-read access. Lockfiles and npm sources are planned for v0.3.
+read access. Lockfiles and npm sources are planned for v0.4.
 
 ## Inheritance
 
@@ -153,20 +153,42 @@ are merged by key (the specific value wins); `command`, `args` and `url` are rep
 
 All problems are reported at once, in the order of the files, so you can fix them in one pass.
 
-## What gets generated (Claude Code)
+## What gets generated
+
+For every agent:
 
 | Path | Content | Committed |
 |---|---|---|
 | `AGENTS.md` | Index: hierarchy, rules, skills, commands, MCP servers | yes |
-| `CLAUDE.md` | `@AGENTS.md` | yes |
 | `.agents/rules/<NN>-<level>-<key>.md` | Rule texts, ordered from specific to general | no |
 | `.agents/skills/<key>/` | Skills | no |
+| `.tunestra/state/` | What tunestra generated last time | no |
+| `.gitignore` | A block between `# >>> tunestra` and `# <<< tunestra` | yes |
+
+### Claude Code
+
+| Path | Content | Committed |
+|---|---|---|
+| `CLAUDE.md` | `@AGENTS.md` | yes |
 | `.claude/rules/tunestra/<NN>-<level>-<key>.md` | Copies of the rules; Claude Code loads them in every session | no |
 | `.claude/skills/<key>` | Symlinks to `.agents/skills/<key>` | no |
 | `.claude/commands/<key>.md` | Commands | no |
 | `.mcp.json` | MCP servers | no |
-| `.tunestra/state/` | What tunestra generated last time | no |
-| `.gitignore` | A block between `# >>> tunestra` and `# <<< tunestra` | yes |
+
+### Codex
+
+Codex reads `AGENTS.md` and `.agents/skills/` by itself. It does not follow the links in
+`AGENTS.md`, so tunestra gives it the rule texts in its config.
+
+| Path | Content | Committed |
+|---|---|---|
+| `.codex/config.toml` | `developer_instructions` with every rule, from specific to general, and `[mcp_servers]` | no |
+| `.agents/skills/<command>/` | Each command as a skill that runs only when you call it: `$release-notes` | no |
+
+Codex reads `.codex/config.toml` only in a trusted project: trust the project when Codex asks.
+Codex has no `type` for MCP servers and does not support SSE: an SSE server is skipped with a
+note, and `headers` become `http_headers`. tunestra owns the whole `.codex/config.toml`; keep
+your personal Codex settings in `~/.codex/config.toml`.
 
 `<NN>` orders rules from specific to general: `10` project, `20` team, `30` domain, `40` base.
 Level instructions get the key `instructions`, and the preset name when it differs from the
@@ -180,7 +202,9 @@ Every generated rule starts with its origin:
 > Level: team, preset: team. Overrides: base.
 ```
 
-Skills and commands are copied as is: their frontmatter must stay on the first line.
+Skills and commands are copied as is: their frontmatter must stay on the first line. For
+Codex, a command gets only `name` and `description` in its frontmatter; other fields, like
+`argument-hint`, are for Claude Code.
 
 ## Running setup again
 
@@ -214,14 +238,15 @@ and tells you where to move their text.
 
 | Release | Scope |
 |---|---|
-| v0.1 | Inheritance for Claude Code (this document) |
-| v0.2 | Codex |
-| v0.3 | Spaces, npm sources, lockfile |
-| v0.4 | `required` / `locked` policies, CI check |
-| v0.5 | Hooks |
-| v0.6 | LLM gateway, permissions |
-| v0.7 | Local plugins |
-| v0.8 | Isolated remote plugins |
+| v0.1 | Inheritance for Claude Code |
+| v0.2 | Codex (this document) |
+| v0.3 | Subagents, a personal `local` level, `env` and permissions |
+| v0.4 | Spaces, npm sources, lockfile |
+| v0.5 | `required` / `locked` policies, CI check |
+| v0.6 | Hooks |
+| v0.7 | LLM gateway |
+| v0.8 | Local plugins |
+| v0.9 | Isolated remote plugins |
 
 ## License
 

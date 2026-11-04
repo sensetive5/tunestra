@@ -3,7 +3,7 @@ import { createTree } from '../../../shared/tests/temp.ts';
 import { loadCommands } from '../commands.ts';
 
 describe('loadCommands', () => {
-  it('keeps the whole file, frontmatter included, because agents read it', async () => {
+  it('keeps the whole file for Claude Code and the text without frontmatter', async () => {
     const content = '---\ndescription: Draft release notes\nmodel: haiku\n---\nDraft notes.\n';
     const dir = await createTree({
       'commands/release-notes.md': content,
@@ -16,6 +16,7 @@ describe('loadCommands', () => {
       source: 'commands/release-notes.md',
       description: 'Draft release notes',
       content,
+      body: 'Draft notes.\n',
     });
   });
 

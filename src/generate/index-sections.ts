@@ -1,8 +1,11 @@
+import { Agent } from '../shared/constants/agents.ts';
 import { PROJECT_CONFIG } from '../shared/constants/files.ts';
 import { AGENTS_RULES_DIR, AGENTS_SKILLS_DIR } from '../shared/constants/output.ts';
+import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { Chain } from '../shared/types/chain.ts';
 import type { Command, McpServer, Preset, Rule, Skill } from '../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../shared/types/resolution.ts';
+import { isString } from '../shared/utils/guards.ts';
 import { renderTable } from '../shared/utils/markdown.ts';
 import { relativePosix } from '../shared/utils/paths.ts';
 import { describeOrigin } from './describe-origin.ts';
@@ -12,7 +15,7 @@ const HIERARCHY_INTRO =
   'Instructions are ordered from specific to general. When two instructions conflict, follow the one from the higher level in this list.';
 
 const RULES_INTRO =
-  'Always follow these rules. Claude Code loads them automatically; other agents should read them before starting work.';
+  'Always follow these rules. Claude Code and Codex load them automatically; other agents should read them before starting work.';
 
 const SKILLS_INTRO = 'Use a skill when the task matches its description.';
 
@@ -60,7 +63,10 @@ export function renderSkills(skills: ReadonlyArray<ResolvedArtifact<Skill>>): st
   return renderSection('Skills', SKILLS_INTRO, table);
 }
 
-export function renderCommands(commands: ReadonlyArray<ResolvedArtifact<Command>>): string {
+export function renderCommands(
+  commands: ReadonlyArray<ResolvedArtifact<Command>>,
+  agents: ReadonlyArray<Agent>,
+): string {
   const rows = commands.map((command) => {
     const origin = describeOrigin(command);
     const description = command.artifact.description ?? '';
@@ -69,7 +75,32 @@ export function renderCommands(commands: ReadonlyArray<ResolvedArtifact<Command>
   });
   const table = renderTable(['Command', 'Level', 'Description'], rows);
 
+  const hints = agents.map(describeCommandCall).filter(isString);
+
+  if (hints.length > 0) {
+    const intro = hints.join(' ');
+
+    return renderSection('Commands', intro, table);
+  }
+
   return renderSection('Commands', undefined, table);
+}
+
+/** How to call a command in the agent, when it is not the usual `/<name>`. */
+function describeCommandCall(agent: Agent): string | undefined {
+  switch (agent) {
+    case Agent.Claude:
+      return undefined;
+    case Agent.Codex:
+      // Codex has no project commands; tunestra gives it each command as a skill.
+      return 'In Codex, a command is a skill with the same name: call it as `$<name>`.';
+    default: {
+      // A new agent without a case here does not compile.
+      const unknownAgent: never = agent;
+
+      throw new TunestraError(`Unknown agent: ${unknownAgent}`);
+    }
+  }
 }
 
 export function renderMcpServers(servers: ReadonlyArray<ResolvedArtifact<McpServer>>): string {

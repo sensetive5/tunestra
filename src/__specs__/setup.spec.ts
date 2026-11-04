@@ -98,4 +98,8 @@ describe('fixtures', () => {
   it('basic', async () => {
     await runFixture('basic');
   });
+
+  it('codex', async () => {
+    await runFixture('codex');
+  });
 });
