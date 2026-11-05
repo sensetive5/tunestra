@@ -7,6 +7,7 @@ import type { Project } from '../shared/types/preset.ts';
 import { checkExists } from '../shared/utils/fs.ts';
 import { readYaml } from '../shared/utils/yaml.ts';
 import { loadArtifacts } from './artifacts/load-artifacts.ts';
+import { createEnvVariables } from './env.ts';
 
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);
@@ -22,6 +23,7 @@ export async function loadProject(dir: string): Promise<Project> {
   const name = config.name ?? folderName;
   const artifactsDir = join(root, PROJECT_DIR);
   const artifacts = await loadArtifacts(artifactsDir, name);
+  const env = createEnvVariables(config.env, configPath, artifactsDir);
 
   return {
     ...config,
@@ -32,5 +34,6 @@ export async function loadProject(dir: string): Promise<Project> {
     artifactsDir,
     remote: undefined,
     ...artifacts,
+    env,
   };
 }

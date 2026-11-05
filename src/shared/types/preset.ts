@@ -48,6 +48,15 @@ export type McpServer = {
   config: McpConfig;
 };
 
+/** An environment variable that agents set in every session. */
+export type EnvVariable = {
+  /** The name of the variable. */
+  key: string;
+  /** The manifest that sets it, relative to the artifact directory of the level. */
+  source: string;
+  value: string;
+};
+
 /**
  * A level of the chain. `TLevel` narrows the level; `TExtension` adds the fields that only
  * this kind of level has.
@@ -69,6 +78,7 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
   skills: ReadonlyArray<Skill>;
   commands: ReadonlyArray<Command>;
   mcp: ReadonlyArray<McpServer>;
+  env: ReadonlyArray<EnvVariable>;
 } & TExtension;
 
 export type Project = Preset<

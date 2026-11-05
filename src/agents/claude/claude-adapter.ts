@@ -3,12 +3,15 @@ import { describeArtifactSource, SETUP_SOURCE } from '../../generate/describe-so
 import { Agent } from '../../shared/constants/agents.ts';
 import { INSTRUCTIONS_FILE } from '../../shared/constants/files.ts';
 import { AGENTS_SKILLS_DIR, GENERATED_NOTICE, OutputKind } from '../../shared/constants/output.ts';
+import { createProblemsError } from '../../shared/errors/create-problems-error.ts';
 import type { AgentAdapter, AgentPlanContext } from '../../shared/types/agent-adapter.ts';
 import type { Output, OutputFile, SetupPlan } from '../../shared/types/output.ts';
-import type { Skill } from '../../shared/types/preset.ts';
+import type { EnvVariable, Skill } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
 import { createFileOutput } from '../../shared/utils/outputs.ts';
+import { isIgnoredByClaude } from './ignored-env.ts';
 import { renderMcpJson } from './mcp-json.ts';
+import { renderSettingsJson, SETTINGS_KEYS } from './settings-json.ts';
 
 const CLAUDE_FILE = 'CLAUDE.md';
 const RULES_DIR = '.claude/rules/tunestra';
@@ -16,11 +19,16 @@ const SKILLS_DIR = '.claude/skills';
 const COMMANDS_DIR = '.claude/commands';
 const MCP_FILE = '.mcp.json';
 const MCP_SOURCE = 'the mcp/ folders of tunestra.yaml and its presets';
+const SETTINGS_FILE = '.claude/settings.json';
+const SETTINGS_SOURCE = 'env in tunestra.yaml and its presets';
+const LOCAL_SETTINGS_FILE = '.claude/settings.local.json';
 
 /**
  * Claude Code reads CLAUDE.md, so it imports AGENTS.md. Rules are copied to `.claude/rules`,
  * which Claude Code loads in every session; a symlink to a directory outside `.claude`
- * would need an approval. Skills are symlinks to the shared `.agents/skills`.
+ * would need an approval. Skills are symlinks to the shared `.agents/skills`. Environment
+ * variables go to `.claude/settings.json`, which the team commits; `settings.local.json`
+ * stays for personal settings.
  */
 export const claudeAdapter: AgentAdapter = {
   agent: Agent.Claude,
@@ -51,11 +59,48 @@ function planClaude(context: AgentPlanContext): SetupPlan {
     outputs.push(mcpFile);
   }
 
+  const protectedPaths = [CLAUDE_FILE];
+  const hasEnv = resolution.env.length > 0;
+
+  if (hasEnv) {
+    const settingsFile = planSettingsFile(resolution.env);
+
+    outputs.push(settingsFile);
+    protectedPaths.push(SETTINGS_FILE);
+  }
+
   return {
     outputs,
     ignoredPaths: [`${RULES_DIR}/`, `${SKILLS_DIR}/`, `${COMMANDS_DIR}/`, MCP_FILE],
-    protectedPaths: [CLAUDE_FILE],
+    protectedPaths,
     notes: [],
+  };
+}
+
+/** Claude Code drops some variables from project settings; setup says so instead. */
+function planSettingsFile(env: ReadonlyArray<ResolvedArtifact<EnvVariable>>): OutputFile {
+  const ignored = env.filter((variable) =>
+    isIgnoredByClaude(variable.artifact.key, variable.artifact.value),
+  );
+  const problems = ignored.map(
+    (variable) =>
+      `${variable.origin.name}: env sets ${variable.artifact.key}, but Claude Code ignores it in project settings. Set it in managed settings, ~/.claude/settings.json or your shell`,
+  );
+
+  if (problems.length > 0) {
+    throw createProblemsError(problems);
+  }
+
+  const content = renderSettingsJson(env);
+  const file = createFileOutput(SETTINGS_FILE, content, SETTINGS_SOURCE);
+  const ownership = {
+    keys: SETTINGS_KEYS,
+    otherKeysTarget: `${LOCAL_SETTINGS_FILE} or ~/.claude/settings.json`,
+  };
+
+  return {
+    ...file,
+    ownership,
   };
 }
 

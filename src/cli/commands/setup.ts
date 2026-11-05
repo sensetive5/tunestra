@@ -45,11 +45,25 @@ function describeSync(plan: SetupPlan, sync: SyncPlan, options: SetupOptions): s
   }
 
   const check = pc.green('✔');
-  const committedFiles = plan.protectedPaths.join(' and ');
+  const committedFiles = joinList(plan.protectedPaths);
 
   lines.push(`${check} Generated ${writeCount} files, removed ${removeCount} stale files.`);
   lines.push(...notes);
   lines.push(`Commit ${committedFiles}; the rest is in .gitignore.`);
 
   return lines.join('\n');
+}
+
+/** For example `AGENTS.md, CLAUDE.md and .claude/settings.json`. */
+function joinList(items: ReadonlyArray<string>): string {
+  const last = items.at(-1) ?? '';
+  const rest = items.slice(0, -1);
+
+  if (rest.length === 0) {
+    return last;
+  }
+
+  const head = rest.join(', ');
+
+  return `${head} and ${last}`;
 }

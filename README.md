@@ -13,7 +13,8 @@
 > before v1.0.
 
 tunestra gives Claude Code, Codex and other AI coding agents **one shared source** of rules,
-skills, commands and MCP servers, and generates each agent's native configuration from it.
+skills, commands, MCP servers and environment variables, and generates each agent's native
+configuration from it.
 
 The source is a chain of **presets**, from general to specific:
 
@@ -44,8 +45,9 @@ extends:
 agents: [claude]            # add codex: [claude, codex]
 ```
 
-Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md` and `CLAUDE.md`. Everything else that
-tunestra generates is listed in `.gitignore` automatically.
+Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md`, `CLAUDE.md` and, when presets set `env`,
+`.claude/settings.json`. Everything else that tunestra generates is listed in `.gitignore`
+automatically.
 
 ## Principles
 
@@ -86,6 +88,8 @@ overrides:                  # optional: patch inherited MCP servers
     tracker:
       env:
         QUEUE: TEAM
+env:                        # optional: environment variables of the agents
+  MCP_TIMEOUT: 120000
 ```
 
 ### Project: `tunestra.yaml`
@@ -136,6 +140,7 @@ chain once, before both of them.
 | Skill | `name` from `SKILL.md`, otherwise the folder name | replaces it | `exclude.skills` |
 | Command | file name without `.md` | replaces it | `exclude.commands` |
 | MCP server | file name without `.yaml` | replaces it | `exclude.mcp` |
+| Environment variable | name in `env` | replaces it | `exclude.env` |
 
 `overrides.mcp.<key>` patches an inherited server instead of replacing it: `env` and `headers`
 are merged by key (the specific value wins); `command`, `args` and `url` are replaced.
@@ -149,7 +154,10 @@ are merged by key (the specific value wins); `command`, `args` and `url` are rep
 - two levels have the same name;
 - a manifest has an unknown field or a missing required field;
 - `exclude` or `overrides` refers to a key that is not inherited;
-- after a patch, an MCP server has both `command` and `url`, or neither.
+- after a patch, an MCP server has both `command` and `url`, or neither;
+- an `env` value refers to another variable, like `${TOKEN}`: agents do not expand it in
+  their settings, so write the value itself and keep secrets out of presets;
+- `env` sets a variable that Claude Code ignores in project settings (see below).
 
 All problems are reported at once, in the order of the files, so you can fix them in one pass.
 
@@ -174,6 +182,20 @@ For every agent:
 | `.claude/skills/<key>` | Symlinks to `.agents/skills/<key>` | no |
 | `.claude/commands/<key>.md` | Commands | no |
 | `.mcp.json` | MCP servers | no |
+| `.claude/settings.json` | `env`, when presets set it | yes |
+
+`.claude/settings.json` is shared by the team, so tunestra writes it and you commit it. Keep
+your personal settings in `.claude/settings.local.json` or `~/.claude/settings.json`. A
+`.claude/settings.json` with other keys, like `hooks` or `model`, stops setup and asks you to
+move them; a file with only `$schema` and `env` is replaced with a warning, for example in a
+fresh clone where `.tunestra/state/` does not exist yet.
+
+Claude Code applies project `env` after you trust the folder. It ignores some variables in
+project settings: the ones that turn telemetry on or choose where it goes
+(`CLAUDE_CODE_ENABLE_TELEMETRY`, `OTEL_*_EXPORTER`, `OTEL_EXPORTER_OTLP_*` and others), and
+the ones that choose its own directories (`HOME`, `XDG_*`, `CLAUDE_CONFIG_DIR`). setup stops
+on them, because they would not work; set them in managed settings, `~/.claude/settings.json`
+or your shell. Values that turn telemetry off, like `OTEL_LOGS_EXPORTER: none`, are allowed.
 
 ### Codex
 
@@ -182,10 +204,12 @@ Codex reads `AGENTS.md` and `.agents/skills/` by itself. It does not follow the 
 
 | Path | Content | Committed |
 |---|---|---|
-| `.codex/config.toml` | `developer_instructions` with every rule, from specific to general, and `[mcp_servers]` | no |
+| `.codex/config.toml` | `developer_instructions` with every rule, from specific to general, `[shell_environment_policy] set` with `env`, and `[mcp_servers]` | no |
 | `.agents/skills/<command>/` | Each command as a skill that runs only when you call it: `$release-notes` | no |
 
 Codex reads `.codex/config.toml` only in a trusted project: trust the project when Codex asks.
+Codex gets `env` as the environment of the commands it runs; it does not change how Codex
+itself works, and Codex ignores telemetry settings in a project.
 Codex has no `type` for MCP servers and does not support SSE: an SSE server is skipped with a
 note, and `headers` become `http_headers`. tunestra owns the whole `.codex/config.toml`; keep
 your personal Codex settings in `~/.codex/config.toml`.
@@ -240,7 +264,7 @@ and tells you where to move their text.
 |---|---|
 | v0.1 | Inheritance for Claude Code |
 | v0.2 | Codex (this document) |
-| v0.3 | Subagents, a personal `local` level, `env` and permissions |
+| v0.3 | `env`, then permissions, subagents and a personal `local` level |
 | v0.4 | Spaces, npm sources, lockfile |
 | v0.5 | `required` / `locked` policies, CI check |
 | v0.6 | Hooks |

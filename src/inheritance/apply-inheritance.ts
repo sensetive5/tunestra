@@ -16,8 +16,15 @@ export function applyInheritance(chain: Chain): Resolution {
     (level) => level.mcp,
     patchMcpServers,
   );
+  const env = inheritArtifacts(chain.levels, ArtifactKind.Env, (level) => level.env);
 
-  const problems = [...rules.problems, ...skills.problems, ...commands.problems, ...mcp.problems];
+  const problems = [
+    ...rules.problems,
+    ...skills.problems,
+    ...commands.problems,
+    ...mcp.problems,
+    ...env.problems,
+  ];
 
   if (problems.length > 0) {
     throw createProblemsError(problems);
@@ -29,5 +36,6 @@ export function applyInheritance(chain: Chain): Resolution {
     skills: skills.artifacts,
     commands: commands.artifacts,
     mcp: mcp.artifacts,
+    env: env.artifacts,
   };
 }

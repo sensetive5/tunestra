@@ -49,6 +49,11 @@ This service manages customer accounts.
 - Never print secrets to logs.
 '''
 
+[shell_environment_policy.set]
+API_BASE_URL = "https://api.example.com"
+MCP_TIMEOUT = "300000"
+OTEL_LOGS_EXPORTER = "none"
+
 [mcp_servers.docs]
 url = "https://docs.example.com/mcp"
 

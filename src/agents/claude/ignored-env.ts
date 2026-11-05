@@ -1,0 +1,89 @@
+/**
+ * Variables that Claude Code drops from project settings, because a repository should not
+ * control them: https://code.claude.com/docs/en/settings-reference#variables-claude-code-ignores-in-env
+ */
+const IGNORED_NAMES: ReadonlySet<string> = new Set([
+  'CLAUDE_CONFIG_DIR',
+  'CLAUDE_CODE_TMPDIR',
+  'HOME',
+  'TMPDIR',
+  'TMP',
+  'TEMP',
+  'SystemRoot',
+  'ComSpec',
+  'ProgramData',
+  'LOCALAPPDATA',
+  'PATHEXT',
+  'PSModulePath',
+  'OTEL_LOG_RAW_API_BODIES',
+  'ENABLE_BETA_TRACING_DETAILED',
+  'BETA_TRACING_ENDPOINT',
+  'CLAUDE_CODE_ENABLE_TELEMETRY',
+  'CLAUDE_CODE_ENHANCED_TELEMETRY_BETA',
+  'ENABLE_ENHANCED_TELEMETRY_BETA',
+  'OTEL_LOGS_EXPORTER',
+  'OTEL_METRICS_EXPORTER',
+  'OTEL_TRACES_EXPORTER',
+  'OTEL_LOG_USER_PROMPTS',
+  'OTEL_LOG_ASSISTANT_RESPONSES',
+  'OTEL_LOG_TOOL_CONTENT',
+  'OTEL_LOG_TOOL_DETAILS',
+  'OTEL_EXPORTER_PROMETHEUS_HOST',
+  'OTEL_EXPORTER_PROMETHEUS_PORT',
+  'CLAUDE_CODE_PROCESS_WRAPPER',
+  'CLAUDE_CODE_SYNC_SKILLS',
+  'CLAUDE_CODE_SYNC_PLUGINS',
+  'CLAUDE_CODE_PLUGIN_CACHE_DIR',
+  'CLAUDE_CODE_PLUGIN_SEED_DIR',
+  'CLAUDE_CODE_OAUTH_TOKEN',
+  'CLAUDE_CODE_OAUTH_REFRESH_TOKEN',
+  'CLAUDE_CODE_OAUTH_SCOPES',
+  'CLAUDE_CODE_USER_DIALOG_TIMEOUT_MS',
+  'CLAUDE_CODE_DISABLE_ATTACHMENTS',
+  'CLAUDE_CODE_DISABLE_FILE_MENTIONS',
+  'CLAUDE_CODE_REMOTE',
+  'CLAUDE_CODE_ACCOUNT_UUID',
+  'CLAUDE_CODE_MESSAGING_SOCKET',
+  'CLAUDE_CODE_MESSAGING_TOKEN',
+  'CLAUDE_CODE_PROJECT_DIR_NAME',
+  'CLAUDE_CODE_RESTRICTED',
+  'CLAUDE_CODE_DISABLE_POWERSHELL_CMD_RM_DENY',
+  'CLAUDE_CODE_DISABLE_DANGEROUS_RM_TIMEOUT',
+  'CLAUDE_CODE_DISABLE_SUBSTITUTION_RM_PROMPT',
+  'CLAUDE_CODE_DISABLE_INLINE_SHELL_RM_PROMPT',
+  'CLAUDE_CODE_DISABLE_MOUNTED_DRIVE_RM_PROMPT',
+  'CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS',
+  'CLAUDE_CODE_WARN_DISK_FREE_GIB',
+  'CLAUDE_CODE_WARN_MEMORY_FREE_GIB',
+]);
+
+/**
+ * Families of ignored variables.
+ *
+ * Matches:        "XDG_CONFIG_HOME", "ProgramFiles(x86)", "CLAUDE_AX_SCREEN_READER",
+ *                 "OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_METRICS_HEADERS"
+ * Does not match: "MCP_TIMEOUT", "OTEL_EXPORTER_OTLP_TIMEOUT", "OTEL_SERVICE_NAME"
+ */
+const IGNORED_NAME_PATTERN =
+  /^(XDG_|ProgramFiles|CLAUDE_AX_|OTEL_EXPORTER_OTLP_(\w+_)?(ENDPOINT|HEADERS|PROTOCOL|CERTIFICATE|CLIENT_KEY|INSECURE)$)/;
+
+/** Values that turn telemetry off: Claude Code applies them even from project settings. */
+const OFF_VALUES: Readonly<Record<string, ReadonlyArray<string>>> = {
+  OTEL_LOGS_EXPORTER: ['none'],
+  OTEL_METRICS_EXPORTER: ['none'],
+  OTEL_TRACES_EXPORTER: ['none'],
+  OTEL_LOG_USER_PROMPTS: ['0', 'false'],
+  OTEL_LOG_TOOL_CONTENT: ['0', 'false'],
+  OTEL_LOG_TOOL_DETAILS: ['0', 'false'],
+};
+
+export function isIgnoredByClaude(name: string, value: string): boolean {
+  const offValues = OFF_VALUES[name] ?? [];
+  const isOff = offValues.includes(value);
+
+  if (isOff) {
+    return false;
+  }
+
+  return IGNORED_NAMES.has(name) || IGNORED_NAME_PATTERN.test(name);
+}

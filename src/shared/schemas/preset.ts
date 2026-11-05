@@ -14,6 +14,48 @@ const stringMap = z.record(z.string(), z.string());
  */
 const SKILL_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+/**
+ * A name of an environment variable.
+ *
+ * Valid:   "MCP_TIMEOUT", "http_proxy", "_PRIVATE"
+ * Invalid: "1PASSWORD" (starts with a digit), "MY-VAR" (hyphen), "" (empty)
+ */
+const ENV_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * A reference to another variable, which agents do not expand in their settings.
+ *
+ * Matches:        "${TOKEN}", "Bearer ${TOKEN}"
+ * Does not match: "$TOKEN", "price: 5$", "{TOKEN}"
+ */
+const ENV_REFERENCE_PATTERN = /\$\{[^}]*\}/;
+
+const ENV_REFERENCE_MESSAGE = `Agents do not expand \${…} in their settings: write the value itself, and keep secrets out of presets`;
+
+/** YAML reads `MCP_TIMEOUT: 120000` as a number; agents need every value as text. */
+const envValue = z
+  .union([z.string(), z.number(), z.boolean()])
+  .transform(String)
+  .refine((value) => ENV_REFERENCE_PATTERN.test(value) === false, {
+    message: ENV_REFERENCE_MESSAGE,
+  });
+
+const envSchema = z.record(z.string(), envValue).superRefine((env, context) => {
+  const names = Object.keys(env);
+
+  for (const name of names) {
+    const isValidName = ENV_NAME_PATTERN.test(name);
+
+    if (isValidName === false) {
+      context.addIssue({
+        code: 'custom',
+        message: `"${name}" is not a variable name: use letters, digits and "_", and do not start with a digit`,
+        path: [name],
+      });
+    }
+  }
+});
+
 export const skillName = z
   .string()
   .regex(SKILL_NAME_PATTERN, 'Use lowercase letters, digits and single hyphens')
@@ -24,6 +66,7 @@ export const excludeSchema = z.strictObject({
   skills: keys.optional(),
   commands: keys.optional(),
   mcp: keys.optional(),
+  env: keys.optional(),
 });
 
 export const mcpPatchSchema = z.strictObject({
@@ -45,6 +88,7 @@ export const presetManifestSchema = z.strictObject({
   extends: z.array(z.string().min(1)).readonly().default([]),
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
+  env: envSchema.default({}),
 });
 
 export const projectConfigSchema = z.strictObject({
@@ -53,6 +97,7 @@ export const projectConfigSchema = z.strictObject({
   agents: z.array(z.enum(Agent)).min(1).readonly().default([Agent.Claude]),
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
+  env: envSchema.default({}),
 });
 
 export const mcpServerSchema = z

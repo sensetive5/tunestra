@@ -1,9 +1,11 @@
 import { join } from 'node:path';
+import { OutputKind } from '../shared/constants/output.ts';
 import { TunestraError } from '../shared/errors/tunestra-error.ts';
-import type { Output } from '../shared/types/output.ts';
+import type { JsonOwnership, Output } from '../shared/types/output.ts';
 import type { OutputRecord, SetupState } from '../shared/types/state.ts';
 import { PathType } from '../shared/utils/fs.ts';
 import { createRecord } from './create-record.ts';
+import { findForeignKeys } from './find-foreign-keys.ts';
 import { type DiskEntry, inspectPath, matchesRecord } from './inspect-path.ts';
 
 export type OutputCheck = {
@@ -45,6 +47,14 @@ export async function checkOutput(
     return createCheck(output, record, warning);
   }
 
+  const ownership = output.kind === OutputKind.File ? output.ownership : undefined;
+
+  if (typeof ownership === 'object' && disk.type === PathType.File) {
+    const warning = await checkOwnedJson(path, output, ownership);
+
+    return createCheck(output, record, warning);
+  }
+
   const isProtected = context.protectedPaths.includes(output.path);
 
   if (isProtected) {
@@ -56,6 +66,33 @@ export async function checkOutput(
   throw new TunestraError(
     `${output.path} already exists, and tunestra did not create it. Move it away and run tunestra setup again`,
   );
+}
+
+/** Takes over a JSON file with only the keys that tunestra writes; other keys stop setup. */
+async function checkOwnedJson(
+  path: string,
+  output: Output,
+  ownership: JsonOwnership,
+): Promise<string> {
+  const foreignKeys = await findForeignKeys(path, ownership.keys);
+
+  if (foreignKeys === undefined) {
+    throw new TunestraError(
+      `${output.path} is not a JSON object, and setup would overwrite it. Fix or delete it and run tunestra setup again`,
+    );
+  }
+
+  const hasForeignKeys = foreignKeys.length > 0;
+
+  if (hasForeignKeys) {
+    const keys = foreignKeys.join(', ');
+
+    throw new TunestraError(
+      `${output.path} has settings that tunestra does not write: ${keys}. Move them to ${ownership.otherKeysTarget}, then run tunestra setup again`,
+    );
+  }
+
+  return `${output.path} had only the settings that tunestra writes; tunestra replaced it. Edit ${output.source} instead`;
 }
 
 /**
