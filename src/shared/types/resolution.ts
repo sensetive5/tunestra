@@ -1,6 +1,6 @@
 import type { Level } from '../constants/levels.ts';
 import type { Chain } from './chain.ts';
-import type { Command, McpServer, Rule, Skill } from './preset.ts';
+import type { Command, EnvVariable, McpServer, Rule, Skill } from './preset.ts';
 
 /** The level that an artifact comes from. */
 export type Origin = {
@@ -32,4 +32,5 @@ export type Resolution = {
   skills: ReadonlyArray<ResolvedArtifact<Skill>>;
   commands: ReadonlyArray<ResolvedArtifact<Command>>;
   mcp: ReadonlyArray<ResolvedArtifact<McpServer>>;
+  env: ReadonlyArray<ResolvedArtifact<EnvVariable>>;
 };

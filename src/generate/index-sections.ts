@@ -3,7 +3,14 @@ import { PROJECT_CONFIG } from '../shared/constants/files.ts';
 import { AGENTS_RULES_DIR, AGENTS_SKILLS_DIR } from '../shared/constants/output.ts';
 import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { Chain } from '../shared/types/chain.ts';
-import type { Command, McpServer, Preset, Rule, Skill } from '../shared/types/preset.ts';
+import type {
+  Command,
+  EnvVariable,
+  McpServer,
+  Preset,
+  Rule,
+  Skill,
+} from '../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../shared/types/resolution.ts';
 import { isString } from '../shared/utils/guards.ts';
 import { renderTable } from '../shared/utils/markdown.ts';
@@ -18,6 +25,9 @@ const RULES_INTRO =
   'Always follow these rules. Claude Code and Codex load them automatically; other agents should read them before starting work.';
 
 const SKILLS_INTRO = 'Use a skill when the task matches its description.';
+
+const ENV_INTRO =
+  'Agents set these variables in every session, also for the commands they run. The values are in the presets.';
 
 export const CHANGING_SECTION = [
   '## Changing this setup',
@@ -113,6 +123,17 @@ export function renderMcpServers(servers: ReadonlyArray<ResolvedArtifact<McpServ
   const table = renderTable(['Server', 'Level', 'Description'], rows);
 
   return renderSection('MCP servers', undefined, table);
+}
+
+export function renderEnv(env: ReadonlyArray<ResolvedArtifact<EnvVariable>>): string {
+  const rows = env.map((variable) => {
+    const origin = describeOrigin(variable);
+
+    return [variable.artifact.key, origin];
+  });
+  const table = renderTable(['Variable', 'Level'], rows);
+
+  return renderSection('Environment', ENV_INTRO, table);
 }
 
 /** The project shows its config file; a preset shows its git reference or its path. */
