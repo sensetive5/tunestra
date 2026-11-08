@@ -13,8 +13,8 @@
 > before v1.0.
 
 tunestra gives Claude Code, Codex and other AI coding agents **one shared source** of rules,
-skills, commands, MCP servers and environment variables, and generates each agent's native
-configuration from it.
+skills, commands, MCP servers, environment variables and permissions, and generates each
+agent's native configuration from it.
 
 The source is a chain of **presets**, from general to specific:
 
@@ -45,8 +45,8 @@ extends:
 agents: [claude]            # add codex: [claude, codex]
 ```
 
-Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md`, `CLAUDE.md` and, when presets set `env`,
-`.claude/settings.json`. Everything else that tunestra generates is listed in `.gitignore`
+Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md`, `CLAUDE.md` and, when presets set `env` or
+`permissions`, `.claude/settings.json`. Everything else that tunestra generates is listed in `.gitignore`
 automatically.
 
 ## Principles
@@ -90,6 +90,10 @@ overrides:                  # optional: patch inherited MCP servers
         QUEUE: TEAM
 env:                        # optional: environment variables of the agents
   MCP_TIMEOUT: 120000
+permissions:                # optional: rules in the syntax of Claude Code
+  allow: [Bash(npm test *)]
+  ask: [Bash(git push *)]
+  deny: [Read(./.env), Bash(rm -rf *)]
 ```
 
 ### Project: `tunestra.yaml`
@@ -141,6 +145,10 @@ chain once, before both of them.
 | Command | file name without `.md` | replaces it | `exclude.commands` |
 | MCP server | file name without `.yaml` | replaces it | `exclude.mcp` |
 | Environment variable | name in `env` | replaces it | `exclude.env` |
+| Permission rule | the rule, like `Bash(npm test *)` | lists are joined: every level adds its rules | `exclude.permissions`, only for `allow` and `ask` |
+
+A `deny` rule cannot be removed: the organization keeps a floor of what agents may never do.
+Agents check `deny` first, so a `deny` rule on any level wins over an `allow` rule.
 
 `overrides.mcp.<key>` patches an inherited server instead of replacing it: `env` and `headers`
 are merged by key (the specific value wins); `command`, `args` and `url` are replaced.
@@ -157,7 +165,8 @@ are merged by key (the specific value wins); `command`, `args` and `url` are rep
 - after a patch, an MCP server has both `command` and `url`, or neither;
 - an `env` value refers to another variable, like `${TOKEN}`: agents do not expand it in
   their settings, so write the value itself and keep secrets out of presets;
-- `env` sets a variable that Claude Code ignores in project settings (see below).
+- `env` sets a variable that Claude Code ignores in project settings (see below);
+- `exclude.permissions` tries to remove a `deny` rule.
 
 All problems are reported at once, in the order of the files, so you can fix them in one pass.
 
@@ -182,15 +191,16 @@ For every agent:
 | `.claude/skills/<key>` | Symlinks to `.agents/skills/<key>` | no |
 | `.claude/commands/<key>.md` | Commands | no |
 | `.mcp.json` | MCP servers | no |
-| `.claude/settings.json` | `env`, when presets set it | yes |
+| `.claude/settings.json` | `env` and `permissions`, when presets set them | yes |
 
 `.claude/settings.json` is shared by the team, so tunestra writes it and you commit it. Keep
 your personal settings in `.claude/settings.local.json` or `~/.claude/settings.json`. A
 `.claude/settings.json` with other keys, like `hooks` or `model`, stops setup and asks you to
-move them; a file with only `$schema` and `env` is replaced with a warning, for example in a
+move them; a file with only `$schema`, `env` and `permissions` is replaced with a warning, for example in a
 fresh clone where `.tunestra/state/` does not exist yet.
 
-Claude Code applies project `env` after you trust the folder. It ignores some variables in
+Claude Code applies project `env` and `allow` rules after you trust the folder; `deny` and
+`ask` rules apply right away. It ignores some variables in
 project settings: the ones that turn telemetry on or choose where it goes
 (`CLAUDE_CODE_ENABLE_TELEMETRY`, `OTEL_*_EXPORTER`, `OTEL_EXPORTER_OTLP_*` and others), and
 the ones that choose its own directories (`HOME`, `XDG_*`, `CLAUDE_CONFIG_DIR`). setup stops
@@ -205,11 +215,19 @@ Codex reads `AGENTS.md` and `.agents/skills/` by itself. It does not follow the 
 | Path | Content | Committed |
 |---|---|---|
 | `.codex/config.toml` | `developer_instructions` with every rule, from specific to general, `[shell_environment_policy] set` with `env`, and `[mcp_servers]` | no |
+| `.codex/rules/tunestra.rules` | `deny` and `ask` rules for shell commands as `prefix_rule`: `forbidden` and `prompt` | no |
 | `.agents/skills/<command>/` | Each command as a skill that runs only when you call it: `$release-notes` | no |
 
 Codex reads `.codex/config.toml` only in a trusted project: trust the project when Codex asks.
 Codex gets `env` as the environment of the commands it runs; it does not change how Codex
 itself works, and Codex ignores telemetry settings in a project.
+
+Codex rules match only the start of a shell command, so tunestra converts only `Bash` rules
+like `Bash(git push *)` or `Bash(rm -rf)`. A rule without a wildcard also becomes a prefix,
+which is stricter for `deny` and `ask`. Other rules (`Read`, `Edit`, `WebFetch`, MCP tools, and
+`Bash` rules with wildcards in the middle or shell syntax) are skipped with a note. `allow`
+rules are skipped too: in Codex, an allowed command runs outside the sandbox without asking,
+which is more than an `allow` rule of Claude Code means.
 Codex has no `type` for MCP servers and does not support SSE: an SSE server is skipped with a
 note, and `headers` become `http_headers`. tunestra owns the whole `.codex/config.toml`; keep
 your personal Codex settings in `~/.codex/config.toml`.
@@ -264,7 +282,7 @@ and tells you where to move their text.
 |---|---|
 | v0.1 | Inheritance for Claude Code |
 | v0.2 | Codex (this document) |
-| v0.3 | `env`, then permissions, subagents and a personal `local` level |
+| v0.3 | `env` and permissions, then subagents and a personal `local` level |
 | v0.4 | Spaces, npm sources, lockfile |
 | v0.5 | `required` / `locked` policies, CI check |
 | v0.6 | Hooks |

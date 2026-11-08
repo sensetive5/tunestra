@@ -5,3 +5,9 @@ env:
   MCP_TIMEOUT: 120000
   NODE_OPTIONS: --max-old-space-size=4096
   OTEL_LOGS_EXPORTER: none
+permissions:
+  ask:
+    - Bash(git push *)
+  deny:
+    - Read(./.env)
+    - Bash(rm -rf *)

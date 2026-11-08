@@ -41,7 +41,26 @@ describe('Claude Code settings', () => {
     expect(plan.ignoredPaths).not.toContain(SETTINGS);
   });
 
-  it('writes no settings without env', async () => {
+  it('writes permissions with sorted lists, without empty ones', async () => {
+    const root = await createTree({
+      'project/tunestra.yaml': 'permissions:\n  deny: [Read(./.env), Bash(rm -rf *)]\n',
+    });
+    const projectDir = join(root, 'project');
+    const settingsPath = join(projectDir, SETTINGS);
+
+    await runSetup(projectDir, { dryRun: false });
+
+    const settings = await readFile(settingsPath, 'utf8');
+    const data: unknown = JSON.parse(settings);
+    expect(data).toEqual({
+      $schema: 'https://json.schemastore.org/claude-code-settings.json',
+      permissions: {
+        deny: ['Bash(rm -rf *)', 'Read(./.env)'],
+      },
+    });
+  });
+
+  it('writes no settings without env and permissions', async () => {
     const root = await createTree({
       'project/tunestra.yaml': 'agents: [claude]\n',
     });
@@ -78,7 +97,7 @@ describe('Claude Code settings', () => {
     const settings = await readFile(settingsPath, 'utf8');
     expect(settings).toContain('"MCP_TIMEOUT": "300000"');
     expect(sync.warnings).toEqual([
-      `${SETTINGS} had only the settings that tunestra writes; tunestra replaced it. Edit env in tunestra.yaml and its presets instead`,
+      `${SETTINGS} had only the settings that tunestra writes; tunestra replaced it. Edit env and permissions in tunestra.yaml and its presets instead`,
     ]);
   });
 

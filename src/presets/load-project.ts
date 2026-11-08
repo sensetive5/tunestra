@@ -8,6 +8,7 @@ import { checkExists } from '../shared/utils/fs.ts';
 import { readYaml } from '../shared/utils/yaml.ts';
 import { loadArtifacts } from './artifacts/load-artifacts.ts';
 import { createEnvVariables } from './env.ts';
+import { createPermissionRules } from './permissions.ts';
 
 export async function loadProject(dir: string): Promise<Project> {
   const root = resolve(dir);
@@ -24,6 +25,7 @@ export async function loadProject(dir: string): Promise<Project> {
   const artifactsDir = join(root, PROJECT_DIR);
   const artifacts = await loadArtifacts(artifactsDir, name);
   const env = createEnvVariables(config.env, configPath, artifactsDir);
+  const permissions = createPermissionRules(config.permissions, configPath, artifactsDir);
 
   return {
     ...config,
@@ -35,5 +37,6 @@ export async function loadProject(dir: string): Promise<Project> {
     remote: undefined,
     ...artifacts,
     env,
+    permissions,
   };
 }

@@ -12,3 +12,7 @@ overrides:
         QUEUE: TEAM
 env:
   MCP_TIMEOUT: 300000
+permissions:
+  allow:
+    - Bash(npm test *)
+    - Bash(npm run lint)

@@ -1,16 +1,20 @@
 import type { z } from 'zod';
 import type { Agent } from '../constants/agents.ts';
 import type { Level } from '../constants/levels.ts';
+import type { PermissionDecision } from '../constants/permissions.ts';
 import type {
   excludeSchema,
   mcpPatchSchema,
   mcpServerSchema,
   overridesSchema,
+  permissionsSchema,
 } from '../schemas/preset.ts';
 
 export type Exclude = z.infer<typeof excludeSchema>;
 export type Overrides = z.infer<typeof overridesSchema>;
 export type McpPatch = z.infer<typeof mcpPatchSchema>;
+/** The `permissions` lists of a manifest. */
+export type Permissions = z.infer<typeof permissionsSchema>;
 export type McpConfig = Omit<z.infer<typeof mcpServerSchema>, 'description'>;
 
 /** Paths in artifacts are relative to the preset's artifact directory. */
@@ -57,6 +61,15 @@ export type EnvVariable = {
   value: string;
 };
 
+/** A permission rule in the syntax of Claude Code, like `Bash(npm test *)`. */
+export type PermissionRule = {
+  /** The rule itself; `exclude.permissions` refers to it. */
+  key: string;
+  decision: PermissionDecision;
+  /** The manifest that sets it, relative to the artifact directory of the level. */
+  source: string;
+};
+
 /**
  * A level of the chain. `TLevel` narrows the level; `TExtension` adds the fields that only
  * this kind of level has.
@@ -79,6 +92,7 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
   commands: ReadonlyArray<Command>;
   mcp: ReadonlyArray<McpServer>;
   env: ReadonlyArray<EnvVariable>;
+  permissions: ReadonlyArray<PermissionRule>;
 } & TExtension;
 
 export type Project = Preset<
