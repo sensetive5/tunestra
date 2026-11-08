@@ -3,6 +3,7 @@ import type { Resolution } from '../shared/types/resolution.ts';
 import {
   CHANGING_SECTION,
   renderCommands,
+  renderEnv,
   renderHierarchy,
   renderMcpServers,
   renderRules,
@@ -22,6 +23,7 @@ export function renderAgentsIndex(resolution: Resolution): string {
   const hasSkills = resolution.skills.length > 0;
   const hasCommands = resolution.commands.length > 0;
   const hasMcpServers = resolution.mcp.length > 0;
+  const hasEnv = resolution.env.length > 0;
 
   if (hasRules) {
     const rules = renderRules(resolution.rules);
@@ -45,6 +47,12 @@ export function renderAgentsIndex(resolution: Resolution): string {
     const servers = renderMcpServers(resolution.mcp);
 
     sections.push(servers);
+  }
+
+  if (hasEnv) {
+    const env = renderEnv(resolution.env);
+
+    sections.push(env);
   }
 
   sections.push(CHANGING_SECTION);

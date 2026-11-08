@@ -10,8 +10,17 @@ type OutputBase<TKind extends OutputKind> = {
   source: string;
 };
 
+/** A JSON file that has no place for a marker and that people may also write by hand. */
+export type JsonOwnership = {
+  /** Top-level keys that tunestra writes; a file with only these keys counts as generated. */
+  keys: ReadonlyArray<string>;
+  /** Where people should move the other keys, for example `.claude/settings.local.json`. */
+  otherKeysTarget: string;
+};
+
 export type OutputFile = OutputBase<typeof OutputKind.File> & {
   content: string;
+  ownership?: JsonOwnership;
 };
 
 export type OutputCopy = OutputBase<typeof OutputKind.Copy> & {

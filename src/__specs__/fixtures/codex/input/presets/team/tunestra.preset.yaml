@@ -10,3 +10,5 @@ overrides:
     tracker:
       env:
         QUEUE: TEAM
+env:
+  MCP_TIMEOUT: 300000
