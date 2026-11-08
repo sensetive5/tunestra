@@ -27,10 +27,19 @@ describe('convertBashRule', () => {
       'Bash(npm test && rm -rf)',
       'Bash(echo $HOME)',
       'Bash( )',
+      'Bash()',
     ];
 
     const patterns = rules.map(convertBashRule);
 
-    expect(patterns).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
+    expect(patterns).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 });

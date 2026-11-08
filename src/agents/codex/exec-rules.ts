@@ -3,13 +3,9 @@ import { PermissionDecision } from '../../shared/constants/permissions.ts';
 import type { PermissionRule } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
 
-/**
- * A Bash rule of Claude Code. Group 1 is the specifier.
- *
- * Matches:        "Bash(npm test *)" → "npm test *", "Bash(git push)" → "git push"
- * Does not match: "Bash" (every command), "Read(./.env)", "Bash()"
- */
-const BASH_RULE_PATTERN = /^Bash\((.+)\)$/;
+/** A Bash rule of Claude Code with a specifier: `Bash(npm test *)`. */
+const BASH_RULE_START = 'Bash(';
+const BASH_RULE_END = ')';
 
 /**
  * Shell syntax and wildcards that a Codex prefix rule cannot express.
@@ -47,13 +43,13 @@ export type ExecRule = {
  * A rule without a wildcard becomes a prefix too: for `deny` and `ask` this is stricter.
  */
 export function convertBashRule(rule: string): ReadonlyArray<string> | undefined {
-  const match = BASH_RULE_PATTERN.exec(rule);
+  const isBashRule = rule.startsWith(BASH_RULE_START) && rule.endsWith(BASH_RULE_END);
 
-  if (match === null) {
+  if (isBashRule === false) {
     return undefined;
   }
 
-  const specifier = match.at(1) ?? '';
+  const specifier = rule.slice(BASH_RULE_START.length, -BASH_RULE_END.length);
   const suffix = ANY_ARGUMENTS_SUFFIXES.find((ending) => specifier.endsWith(ending));
   const command = typeof suffix === 'string' ? specifier.slice(0, -suffix.length) : specifier;
   const hasShellSyntax = SHELL_SYNTAX_PATTERN.test(command);
