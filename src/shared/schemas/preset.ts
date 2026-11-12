@@ -56,6 +56,31 @@ const envSchema = z.record(z.string(), envValue).superRefine((env, context) => {
   }
 });
 
+/**
+ * A permission rule in the syntax of Claude Code: a tool name, optionally with a specifier.
+ *
+ * Valid:   "Bash", "Bash(npm test *)", "Read(./.env)", "mcp__tracker__create_issue", "mcp__docs__*"
+ * Invalid: "" (empty), "(npm test)" (no tool), "Bash(npm test" (no closing parenthesis)
+ */
+const PERMISSION_RULE_PATTERN = /^[A-Za-z][\w*-]*(\(.+\))?$/;
+
+const permissionRules = z
+  .array(
+    z
+      .string()
+      .regex(
+        PERMISSION_RULE_PATTERN,
+        'Write a rule as Tool or Tool(specifier), like Bash(npm test *)',
+      ),
+  )
+  .readonly();
+
+export const permissionsSchema = z.strictObject({
+  allow: permissionRules.optional(),
+  ask: permissionRules.optional(),
+  deny: permissionRules.optional(),
+});
+
 export const skillName = z
   .string()
   .regex(SKILL_NAME_PATTERN, 'Use lowercase letters, digits and single hyphens')
@@ -67,6 +92,8 @@ export const excludeSchema = z.strictObject({
   commands: keys.optional(),
   mcp: keys.optional(),
   env: keys.optional(),
+  /** Inherited `allow` and `ask` rules; a `deny` rule cannot be removed. */
+  permissions: keys.optional(),
 });
 
 export const mcpPatchSchema = z.strictObject({
@@ -89,6 +116,7 @@ export const presetManifestSchema = z.strictObject({
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
   env: envSchema.default({}),
+  permissions: permissionsSchema.default({}),
 });
 
 export const projectConfigSchema = z.strictObject({
@@ -98,6 +126,7 @@ export const projectConfigSchema = z.strictObject({
   exclude: excludeSchema.default({}),
   overrides: overridesSchema.default({}),
   env: envSchema.default({}),
+  permissions: permissionsSchema.default({}),
 });
 
 export const mcpServerSchema = z

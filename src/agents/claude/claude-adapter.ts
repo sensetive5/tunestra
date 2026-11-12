@@ -6,7 +6,7 @@ import { AGENTS_SKILLS_DIR, GENERATED_NOTICE, OutputKind } from '../../shared/co
 import { createProblemsError } from '../../shared/errors/create-problems-error.ts';
 import type { AgentAdapter, AgentPlanContext } from '../../shared/types/agent-adapter.ts';
 import type { Output, OutputFile, SetupPlan } from '../../shared/types/output.ts';
-import type { EnvVariable, Skill } from '../../shared/types/preset.ts';
+import type { EnvVariable, PermissionRule, Skill } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
 import { createFileOutput } from '../../shared/utils/outputs.ts';
 import { isIgnoredByClaude } from './ignored-env.ts';
@@ -20,15 +20,15 @@ const COMMANDS_DIR = '.claude/commands';
 const MCP_FILE = '.mcp.json';
 const MCP_SOURCE = 'the mcp/ folders of tunestra.yaml and its presets';
 const SETTINGS_FILE = '.claude/settings.json';
-const SETTINGS_SOURCE = 'env in tunestra.yaml and its presets';
+const SETTINGS_SOURCE = 'env and permissions in tunestra.yaml and its presets';
 const LOCAL_SETTINGS_FILE = '.claude/settings.local.json';
 
 /**
  * Claude Code reads CLAUDE.md, so it imports AGENTS.md. Rules are copied to `.claude/rules`,
  * which Claude Code loads in every session; a symlink to a directory outside `.claude`
  * would need an approval. Skills are symlinks to the shared `.agents/skills`. Environment
- * variables go to `.claude/settings.json`, which the team commits; `settings.local.json`
- * stays for personal settings.
+ * variables and permissions go to `.claude/settings.json`, which the team commits;
+ * `settings.local.json` stays for personal settings.
  */
 export const claudeAdapter: AgentAdapter = {
   agent: Agent.Claude,
@@ -60,10 +60,10 @@ function planClaude(context: AgentPlanContext): SetupPlan {
   }
 
   const protectedPaths = [CLAUDE_FILE];
-  const hasEnv = resolution.env.length > 0;
+  const hasSettings = resolution.env.length > 0 || resolution.permissions.length > 0;
 
-  if (hasEnv) {
-    const settingsFile = planSettingsFile(resolution.env);
+  if (hasSettings) {
+    const settingsFile = planSettingsFile(resolution.env, resolution.permissions);
 
     outputs.push(settingsFile);
     protectedPaths.push(SETTINGS_FILE);
@@ -78,7 +78,10 @@ function planClaude(context: AgentPlanContext): SetupPlan {
 }
 
 /** Claude Code drops some variables from project settings; setup says so instead. */
-function planSettingsFile(env: ReadonlyArray<ResolvedArtifact<EnvVariable>>): OutputFile {
+function planSettingsFile(
+  env: ReadonlyArray<ResolvedArtifact<EnvVariable>>,
+  permissions: ReadonlyArray<ResolvedArtifact<PermissionRule>>,
+): OutputFile {
   const ignored = env.filter((variable) =>
     isIgnoredByClaude(variable.artifact.key, variable.artifact.value),
   );
@@ -91,7 +94,11 @@ function planSettingsFile(env: ReadonlyArray<ResolvedArtifact<EnvVariable>>): Ou
     throw createProblemsError(problems);
   }
 
-  const content = renderSettingsJson(env);
+  const settings = {
+    env,
+    permissions,
+  };
+  const content = renderSettingsJson(settings);
   const file = createFileOutput(SETTINGS_FILE, content, SETTINGS_SOURCE);
   const ownership = {
     keys: SETTINGS_KEYS,

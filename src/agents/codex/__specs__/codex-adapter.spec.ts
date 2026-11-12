@@ -118,6 +118,51 @@ describe('codexAdapter', () => {
     );
   });
 
+  it('gives Codex deny and ask rules for shell commands', async () => {
+    const root = await createTree({
+      ...PROJECT,
+      'project/tunestra.yaml': [
+        'extends: [../base]',
+        'agents: [codex]',
+        'permissions:',
+        '  ask: [Bash(git push *)]',
+        '  deny: [Bash(rm -rf *)]',
+        '',
+      ].join('\n'),
+    });
+    const projectDir = join(root, 'project');
+    const rulesPath = join(projectDir, '.codex/rules/tunestra.rules');
+
+    const { plan } = await runSetup(projectDir, { dryRun: false });
+
+    const rules = await readFile(rulesPath, 'utf8');
+    expect(rules).toContain('pattern = ["git", "push"],\n    decision = "prompt",');
+    expect(rules).toContain('pattern = ["rm", "-rf"],\n    decision = "forbidden",');
+    expect(plan.ignoredPaths).toContain('.codex/rules/tunestra.rules');
+  });
+
+  it('skips allow rules and rules that Codex cannot enforce, with notes', async () => {
+    const root = await createTree({
+      'project/tunestra.yaml': [
+        'agents: [codex]',
+        'permissions:',
+        '  allow: [Bash(npm test *)]',
+        '  deny: [Read(./.env)]',
+        '',
+      ].join('\n'),
+    });
+    const projectDir = join(root, 'project');
+
+    const { plan } = await runSetup(projectDir, { dryRun: true });
+
+    const paths = plan.outputs.map((output) => output.path);
+    expect(paths).toEqual(['AGENTS.md']);
+    expect(plan.notes).toEqual([
+      'Codex skips permission rules that it cannot enforce: Read(./.env). Codex rules match only the start of a shell command.',
+      'Codex skips allow rules: Bash(npm test *). In Codex, an allowed command runs outside the sandbox without asking.',
+    ]);
+  });
+
   it('writes no config when there are no rules and no MCP servers', async () => {
     const root = await createTree({
       'project/tunestra.yaml': 'agents: [codex]\n',

@@ -5,5 +5,6 @@
 /.claude/commands/
 /.mcp.json
 /.codex/config.toml
+/.codex/rules/tunestra.rules
 /.tunestra/state/
 # <<< tunestra

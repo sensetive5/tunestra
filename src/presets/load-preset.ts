@@ -8,6 +8,7 @@ import { checkExists } from '../shared/utils/fs.ts';
 import { readYaml } from '../shared/utils/yaml.ts';
 import { loadArtifacts } from './artifacts/load-artifacts.ts';
 import { createEnvVariables } from './env.ts';
+import { createPermissionRules } from './permissions.ts';
 
 export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
   const root = resolve(dir);
@@ -21,6 +22,7 @@ export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
   const manifest = await readYaml(manifestPath, presetManifestSchema, 'preset manifest');
   const artifacts = await loadArtifacts(root, manifest.name);
   const env = createEnvVariables(manifest.env, manifestPath, root);
+  const permissions = createPermissionRules(manifest.permissions, manifestPath, root);
 
   return {
     ...manifest,
@@ -30,5 +32,6 @@ export async function loadPreset(dir: string): Promise<Preset<PresetLevel>> {
     remote: undefined,
     ...artifacts,
     env,
+    permissions,
   };
 }
