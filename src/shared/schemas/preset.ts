@@ -91,6 +91,7 @@ export const excludeSchema = z.strictObject({
   skills: keys.optional(),
   commands: keys.optional(),
   mcp: keys.optional(),
+  subagents: keys.optional(),
   env: keys.optional(),
   /** Inherited `allow` and `ask` rules; a `deny` rule cannot be removed. */
   permissions: keys.optional(),

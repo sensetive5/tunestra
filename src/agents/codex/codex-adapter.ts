@@ -1,3 +1,4 @@
+import { describeArtifactSource } from '../../generate/describe-source.ts';
 import { Agent } from '../../shared/constants/agents.ts';
 import { skillName } from '../../shared/schemas/preset.ts';
 import type { AgentAdapter, AgentPlanContext } from '../../shared/types/agent-adapter.ts';
@@ -14,11 +15,13 @@ import {
   hasCodexDecision,
   renderExecRules,
 } from './exec-rules.ts';
+import { renderSubagentToml } from './subagent-toml.ts';
 
 const CONFIG_FILE = '.codex/config.toml';
 const CONFIG_SOURCE = 'the rules/ and mcp/ folders and env of tunestra.yaml and its presets';
 const EXEC_RULES_FILE = '.codex/rules/tunestra.rules';
 const EXEC_RULES_SOURCE = 'permissions in tunestra.yaml and its presets';
+const SUBAGENTS_DIR = '.codex/agents';
 
 const INSTRUCTIONS_INTRO =
   'Rules of this project, ordered from specific to general. When two rules conflict, follow the one that comes first.';
@@ -30,7 +33,8 @@ const TRUST_NOTE =
  * Codex reads AGENTS.md and the skills in `.agents/skills` by itself. Rules go to
  * `developer_instructions` in `.codex/config.toml`, because Codex does not follow the links
  * in AGENTS.md; MCP servers and env go to the same file. Commands become skills, and
- * permission rules for shell commands become `.codex/rules/tunestra.rules`.
+ * permission rules for shell commands become `.codex/rules/tunestra.rules`. Subagents go
+ * to `.codex/agents`.
  */
 export const codexAdapter: AgentAdapter = {
   agent: Agent.Codex,
@@ -73,6 +77,28 @@ function planCodex(context: AgentPlanContext): SetupPlan {
 
     return true;
   });
+  const subagentFiles = resolution.subagents.map((subagent) => {
+    const path = `${SUBAGENTS_DIR}/${subagent.artifact.key}.toml`;
+    const content = renderSubagentToml(subagent.artifact);
+    const source = describeArtifactSource(projectDir, subagent.origin, subagent.artifact.source);
+
+    return createFileOutput(path, content, source);
+  });
+  const readOnlySubagents = resolution.subagents
+    .filter((subagent) => subagent.artifact.readOnly)
+    .map((subagent) => subagent.artifact.key);
+  const hasReadOnlySubagents = readOnlySubagents.length > 0;
+
+  outputs.push(...subagentFiles);
+
+  if (hasReadOnlySubagents) {
+    const names = readOnlySubagents.join(', ');
+
+    notes.push(
+      `Codex cannot make subagents read-only: ${names}. It turns off their shell and asks them not to edit files.`,
+    );
+  }
+
   const configFile = planConfigFile(ruleFiles, servers, resolution.env);
   const execRules = planExecRules(resolution.permissions);
   const ignoredPaths: Array<string> = [];
@@ -87,6 +113,12 @@ function planCodex(context: AgentPlanContext): SetupPlan {
   if (typeof execRules.file === 'object') {
     outputs.push(execRules.file);
     ignoredPaths.push(EXEC_RULES_FILE);
+  }
+
+  const hasSubagents = subagentFiles.length > 0;
+
+  if (hasSubagents) {
+    ignoredPaths.push(`${SUBAGENTS_DIR}/`);
   }
 
   const hasCodexConfig = ignoredPaths.length > 0;

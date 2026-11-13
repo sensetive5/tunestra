@@ -7,6 +7,7 @@ export const ArtifactKind = {
   Skills: 'skills',
   Commands: 'commands',
   Mcp: 'mcp',
+  Subagents: 'subagents',
   Env: 'env',
 } as const;
 

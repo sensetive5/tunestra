@@ -17,6 +17,7 @@ export function describeResolution(resolution: Resolution): string {
     describeSection('Skills', resolution.skills, projectDir),
     describeSection('Commands', resolution.commands, projectDir),
     describeSection('MCP servers', resolution.mcp, projectDir),
+    describeSection('Subagents', resolution.subagents, projectDir),
     describeSection('Environment', resolution.env, projectDir),
     describeSection('Permissions', permissions, projectDir),
   ];

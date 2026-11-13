@@ -17,6 +17,11 @@ export function applyInheritance(chain: Chain): Resolution {
     (level) => level.mcp,
     patchMcpServers,
   );
+  const subagents = inheritArtifacts(
+    chain.levels,
+    ArtifactKind.Subagents,
+    (level) => level.subagents,
+  );
   const env = inheritArtifacts(chain.levels, ArtifactKind.Env, (level) => level.env);
   const permissions = inheritPermissions(chain.levels);
 
@@ -25,6 +30,7 @@ export function applyInheritance(chain: Chain): Resolution {
     ...skills.problems,
     ...commands.problems,
     ...mcp.problems,
+    ...subagents.problems,
     ...env.problems,
     ...permissions.problems,
   ];
@@ -39,6 +45,7 @@ export function applyInheritance(chain: Chain): Resolution {
     skills: skills.artifacts,
     commands: commands.artifacts,
     mcp: mcp.artifacts,
+    subagents: subagents.artifacts,
     env: env.artifacts,
     permissions: permissions.artifacts,
   };

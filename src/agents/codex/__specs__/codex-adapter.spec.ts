@@ -176,6 +176,25 @@ describe('codexAdapter', () => {
     expect(plan.notes).toEqual([]);
   });
 
+  it('gives Codex a subagent and says that it cannot make it read-only', async () => {
+    const root = await createTree({
+      'project/tunestra.yaml': 'agents: [codex]\n',
+      'project/.tunestra/agents/reviewer.md':
+        '---\ndescription: Reviews diffs\nreadOnly: true\n---\nReview the diff.\n',
+    });
+    const projectDir = join(root, 'project');
+
+    const { plan } = await runSetup(projectDir, { dryRun: true });
+
+    const paths = plan.outputs.map((output) => output.path);
+    expect(paths).toContain('.codex/agents/reviewer.toml');
+    expect(plan.ignoredPaths).toContain('.codex/agents/');
+    expect(plan.notes).toEqual([
+      'Codex cannot make subagents read-only: reviewer. It turns off their shell and asks them not to edit files.',
+      'Codex reads .codex/ only in a trusted project: trust the project when Codex asks.',
+    ]);
+  });
+
   it('takes back its own config when the state is lost', async () => {
     const root = await createTree(PROJECT);
     const projectDir = join(root, 'project');

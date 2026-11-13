@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import type { Agent } from '../constants/agents.ts';
 import type { Level } from '../constants/levels.ts';
 import type { PermissionDecision } from '../constants/permissions.ts';
+import type { SubagentEffort } from '../constants/subagents.ts';
 import type {
   excludeSchema,
   mcpPatchSchema,
@@ -45,6 +46,22 @@ export type Command = {
   body: string;
 };
 
+/** A subagent that the main agent can hand a task to. */
+export type Subagent = {
+  key: string;
+  source: string;
+  description: string;
+  /** The model for each agent; an agent without one uses the model of the main session. */
+  model: SubagentModel;
+  effort: SubagentEffort | undefined;
+  /** The subagent must not change files. */
+  readOnly: boolean;
+  /** Instructions of the subagent: the file without frontmatter. */
+  body: string;
+};
+
+export type SubagentModel = Partial<Record<Agent, string>>;
+
 export type McpServer = {
   key: string;
   source: string;
@@ -80,7 +97,7 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
   description: string | undefined;
   /** Directory of the manifest; `extends` is resolved against it. */
   dir: string;
-  /** Directory with rules/, skills/, commands/ and mcp/. */
+  /** Directory with rules/, skills/, commands/, mcp/ and agents/. */
   artifactsDir: string;
   /** The git reference, when the preset was downloaded: `github:org/presets/team#v1`. */
   remote: string | undefined;
@@ -91,6 +108,7 @@ export type Preset<TLevel extends Level = Level, TExtension extends object = obj
   skills: ReadonlyArray<Skill>;
   commands: ReadonlyArray<Command>;
   mcp: ReadonlyArray<McpServer>;
+  subagents: ReadonlyArray<Subagent>;
   env: ReadonlyArray<EnvVariable>;
   permissions: ReadonlyArray<PermissionRule>;
 } & TExtension;
@@ -103,4 +121,4 @@ export type Project = Preset<
 >;
 
 /** The artifacts of one level, collected from its folders. */
-export type Artifacts = Pick<Preset, 'rules' | 'skills' | 'commands' | 'mcp'>;
+export type Artifacts = Pick<Preset, 'rules' | 'skills' | 'commands' | 'mcp' | 'subagents'>;

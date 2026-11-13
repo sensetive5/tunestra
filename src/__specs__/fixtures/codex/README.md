@@ -12,4 +12,6 @@ What this fixture covers:
 - `env` on every level: a number as text, a variable overridden by team and one excluded by
   the project, an off value for telemetry that Claude Code accepts from a project;
 - `env` in `.claude/settings.json` and in `[shell_environment_policy] set` of Codex;
+- subagents: team overrides `reviewer` of base and makes it read-only with a model for each
+  agent, the project excludes `researcher`;
 - the outputs of Claude Code and Codex in one project, without conflicts.

@@ -3,6 +3,7 @@
 /.claude/rules/tunestra/
 /.claude/skills/
 /.claude/commands/
+/.claude/agents/
 /.mcp.json
 /.tunestra/state/
 # <<< tunestra

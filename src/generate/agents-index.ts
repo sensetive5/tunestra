@@ -8,11 +8,12 @@ import {
   renderMcpServers,
   renderRules,
   renderSkills,
+  renderSubagents,
 } from './index-sections.ts';
 
 /**
  * AGENTS.md: an index of the setup, not the rules themselves. It lists the levels, every
- * rule, skill, command and MCP server, where each comes from and where its file is.
+ * rule, skill, command, MCP server and subagent, where each comes from and where its file is.
  */
 export function renderAgentsIndex(resolution: Resolution): string {
   const title = `# AI agent context: ${resolution.chain.project.name}`;
@@ -23,6 +24,7 @@ export function renderAgentsIndex(resolution: Resolution): string {
   const hasSkills = resolution.skills.length > 0;
   const hasCommands = resolution.commands.length > 0;
   const hasMcpServers = resolution.mcp.length > 0;
+  const hasSubagents = resolution.subagents.length > 0;
   const hasEnv = resolution.env.length > 0;
 
   if (hasRules) {
@@ -47,6 +49,12 @@ export function renderAgentsIndex(resolution: Resolution): string {
     const servers = renderMcpServers(resolution.mcp);
 
     sections.push(servers);
+  }
+
+  if (hasSubagents) {
+    const subagents = renderSubagents(resolution.subagents);
+
+    sections.push(subagents);
   }
 
   if (hasEnv) {

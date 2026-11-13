@@ -70,8 +70,25 @@ the manifest only holds metadata and overrides.
   rules/<key>.md            # rules, one topic per file
   skills/<key>/SKILL.md     # skills (Agent Skills format)
   commands/<key>.md         # slash commands
+  agents/<key>.md           # subagents
   mcp/<key>.yaml            # MCP servers
 ```
+
+A subagent is a markdown file with frontmatter; the text after it is the instructions:
+
+```md
+---
+description: Reviews a diff for bugs and missing tests   # required: when to use it
+model:                      # optional: the model for each agent
+  claude: sonnet            #   otherwise the agent uses the model of the main session
+  codex: gpt-5.5
+effort: medium              # optional: low | medium | high | xhigh
+readOnly: true              # optional: the subagent must not change files
+---
+Review the diff. Report each finding with a file and a line.
+```
+
+The file name is the name of the subagent: lowercase letters, digits and single hyphens.
 
 ### Manifest: `tunestra.preset.yaml`
 
@@ -143,6 +160,7 @@ chain once, before both of them.
 | Level instructions (`AGENTS.md`) | `instructions@<preset name>` | never collides: every level keeps its own | `exclude.rules` |
 | Skill | `name` from `SKILL.md`, otherwise the folder name | replaces it | `exclude.skills` |
 | Command | file name without `.md` | replaces it | `exclude.commands` |
+| Subagent | file name without `.md` | replaces it | `exclude.subagents` |
 | MCP server | file name without `.yaml` | replaces it | `exclude.mcp` |
 | Environment variable | name in `env` | replaces it | `exclude.env` |
 | Permission rule | the rule, like `Bash(npm test *)` | lists are joined: every level adds its rules | `exclude.permissions`, only for `allow` and `ask` |
@@ -166,7 +184,9 @@ are merged by key (the specific value wins); `command`, `args` and `url` are rep
 - an `env` value refers to another variable, like `${TOKEN}`: agents do not expand it in
   their settings, so write the value itself and keep secrets out of presets;
 - `env` sets a variable that Claude Code ignores in project settings (see below);
-- `exclude.permissions` tries to remove a `deny` rule.
+- `exclude.permissions` tries to remove a `deny` rule;
+- a subagent has no `description` or no instructions, an unknown field, or a file name that
+  cannot be a subagent name.
 
 All problems are reported at once, in the order of the files, so you can fix them in one pass.
 
@@ -176,7 +196,7 @@ For every agent:
 
 | Path | Content | Committed |
 |---|---|---|
-| `AGENTS.md` | Index: hierarchy, rules, skills, commands, MCP servers | yes |
+| `AGENTS.md` | Index: hierarchy, rules, skills, commands, MCP servers, subagents | yes |
 | `.agents/rules/<NN>-<level>-<key>.md` | Rule texts, ordered from specific to general | no |
 | `.agents/skills/<key>/` | Skills | no |
 | `.tunestra/state/` | What tunestra generated last time | no |
@@ -190,6 +210,7 @@ For every agent:
 | `.claude/rules/tunestra/<NN>-<level>-<key>.md` | Copies of the rules; Claude Code loads them in every session | no |
 | `.claude/skills/<key>` | Symlinks to `.agents/skills/<key>` | no |
 | `.claude/commands/<key>.md` | Commands | no |
+| `.claude/agents/<key>.md` | Subagents | no |
 | `.mcp.json` | MCP servers | no |
 | `.claude/settings.json` | `env` and `permissions`, when presets set them | yes |
 
@@ -207,6 +228,9 @@ the ones that choose its own directories (`HOME`, `XDG_*`, `CLAUDE_CONFIG_DIR`).
 on them, because they would not work; set them in managed settings, `~/.claude/settings.json`
 or your shell. Values that turn telemetry off, like `OTEL_LOGS_EXPORTER: none`, are allowed.
 
+A read-only subagent of Claude Code loses the tools that change files: `Write`, `Edit`,
+`NotebookEdit` and `Bash`. It keeps the tools that read and search, and MCP tools.
+
 ### Codex
 
 Codex reads `AGENTS.md` and `.agents/skills/` by itself. It does not follow the links in
@@ -217,6 +241,7 @@ Codex reads `AGENTS.md` and `.agents/skills/` by itself. It does not follow the 
 | `.codex/config.toml` | `developer_instructions` with every rule, from specific to general, `[shell_environment_policy] set` with `env`, and `[mcp_servers]` | no |
 | `.codex/rules/tunestra.rules` | `deny` and `ask` rules for shell commands as `prefix_rule`: `forbidden` and `prompt` | no |
 | `.agents/skills/<command>/` | Each command as a skill that runs only when you call it: `$release-notes` | no |
+| `.codex/agents/<key>.toml` | Subagents | no |
 
 Codex reads `.codex/config.toml` only in a trusted project: trust the project when Codex asks.
 Codex gets `env` as the environment of the commands it runs; it does not change how Codex
@@ -231,6 +256,11 @@ which is more than an `allow` rule of Claude Code means.
 Codex has no `type` for MCP servers and does not support SSE: an SSE server is skipped with a
 note, and `headers` become `http_headers`. tunestra owns the whole `.codex/config.toml`; keep
 your personal Codex settings in `~/.codex/config.toml`.
+
+A Codex subagent gets the sandbox, the permissions and the MCP servers of the main session; its
+file can change only the model and the instructions. So Codex cannot make a subagent
+read-only: tunestra turns off its shell (`features.shell_tool = false`) and asks it not to
+edit files in the instructions, and setup says so in a note.
 
 `<NN>` orders rules from specific to general: `10` project, `20` team, `30` domain, `40` base.
 Level instructions get the key `instructions`, and the preset name when it differs from the
