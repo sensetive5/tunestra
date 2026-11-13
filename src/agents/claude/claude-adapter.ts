@@ -12,11 +12,13 @@ import { createFileOutput } from '../../shared/utils/outputs.ts';
 import { isIgnoredByClaude } from './ignored-env.ts';
 import { renderMcpJson } from './mcp-json.ts';
 import { renderSettingsJson, SETTINGS_KEYS } from './settings-json.ts';
+import { renderSubagentMd } from './subagent-md.ts';
 
 const CLAUDE_FILE = 'CLAUDE.md';
 const RULES_DIR = '.claude/rules/tunestra';
 const SKILLS_DIR = '.claude/skills';
 const COMMANDS_DIR = '.claude/commands';
+const SUBAGENTS_DIR = '.claude/agents';
 const MCP_FILE = '.mcp.json';
 const MCP_SOURCE = 'the mcp/ folders of tunestra.yaml and its presets';
 const SETTINGS_FILE = '.claude/settings.json';
@@ -48,7 +50,20 @@ function planClaude(context: AgentPlanContext): SetupPlan {
 
     return createFileOutput(path, command.artifact.content, source);
   });
-  const outputs: Array<Output> = [claudeFile, ...ruleCopies, ...skillLinks, ...commandFiles];
+  const subagentFiles = resolution.subagents.map((subagent) => {
+    const path = `${SUBAGENTS_DIR}/${subagent.artifact.key}.md`;
+    const content = renderSubagentMd(subagent.artifact);
+    const source = describeArtifactSource(projectDir, subagent.origin, subagent.artifact.source);
+
+    return createFileOutput(path, content, source);
+  });
+  const outputs: Array<Output> = [
+    claudeFile,
+    ...ruleCopies,
+    ...skillLinks,
+    ...commandFiles,
+    ...subagentFiles,
+  ];
 
   const hasMcpServers = resolution.mcp.length > 0;
 
@@ -71,7 +86,13 @@ function planClaude(context: AgentPlanContext): SetupPlan {
 
   return {
     outputs,
-    ignoredPaths: [`${RULES_DIR}/`, `${SKILLS_DIR}/`, `${COMMANDS_DIR}/`, MCP_FILE],
+    ignoredPaths: [
+      `${RULES_DIR}/`,
+      `${SKILLS_DIR}/`,
+      `${COMMANDS_DIR}/`,
+      `${SUBAGENTS_DIR}/`,
+      MCP_FILE,
+    ],
     protectedPaths,
     notes: [],
   };

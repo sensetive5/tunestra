@@ -49,6 +49,14 @@ In Codex, a command is a skill with the same name: call it as `$<name>`.
 | docs | team | Library docs |
 | tracker | base, patched by team | Issue tracker |
 
+## Subagents
+
+Hand a task to a subagent when the task matches its description.
+
+| Subagent | Level | When to use |
+|---|---|---|
+| reviewer | team, overrides base | Reviews a diff for bugs and missing tests |
+
 ## Environment
 
 Agents set these variables in every session, also for the commands they run. The values are in the presets.

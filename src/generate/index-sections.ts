@@ -10,6 +10,7 @@ import type {
   Preset,
   Rule,
   Skill,
+  Subagent,
 } from '../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../shared/types/resolution.ts';
 import { isString } from '../shared/utils/guards.ts';
@@ -25,6 +26,8 @@ const RULES_INTRO =
   'Always follow these rules. Claude Code and Codex load them automatically; other agents should read them before starting work.';
 
 const SKILLS_INTRO = 'Use a skill when the task matches its description.';
+
+const SUBAGENTS_INTRO = 'Hand a task to a subagent when the task matches its description.';
 
 const ENV_INTRO =
   'Agents set these variables in every session, also for the commands they run. The values are in the presets.';
@@ -123,6 +126,17 @@ export function renderMcpServers(servers: ReadonlyArray<ResolvedArtifact<McpServ
   const table = renderTable(['Server', 'Level', 'Description'], rows);
 
   return renderSection('MCP servers', undefined, table);
+}
+
+export function renderSubagents(subagents: ReadonlyArray<ResolvedArtifact<Subagent>>): string {
+  const rows = subagents.map((subagent) => {
+    const origin = describeOrigin(subagent);
+
+    return [subagent.artifact.key, origin, subagent.artifact.description];
+  });
+  const table = renderTable(['Subagent', 'Level', 'When to use'], rows);
+
+  return renderSection('Subagents', SUBAGENTS_INTRO, table);
 }
 
 export function renderEnv(env: ReadonlyArray<ResolvedArtifact<EnvVariable>>): string {
