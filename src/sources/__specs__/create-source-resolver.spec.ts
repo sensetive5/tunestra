@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createFakeDownload } from '../../shared/tests/download.ts';
 import { createTempDir, createTree } from '../../shared/tests/temp.ts';
 import { createSourceResolver } from '../create-source-resolver.ts';
@@ -21,6 +21,18 @@ describe('createSourceResolver', () => {
     const dir = await resolver.resolve('../presets/team', projectDir);
 
     expect(dir).toBe(join(projectDir, '../presets/team'));
+  });
+
+  it('resolves a path that starts with ~/ from the home directory', async () => {
+    const projectDir = await createTempDir('project');
+    const homeDir = await createTempDir('home');
+    vi.stubEnv('HOME', homeDir);
+    const resolver = createSourceResolver(projectDir);
+
+    const dir = await resolver.resolve('~/presets/me', projectDir);
+
+    vi.unstubAllEnvs();
+    expect(dir).toBe(join(homeDir, 'presets/me'));
   });
 
   it('downloads a repository once for several presets', async () => {

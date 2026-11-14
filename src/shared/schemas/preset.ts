@@ -130,6 +130,16 @@ export const projectConfigSchema = z.strictObject({
   permissions: permissionsSchema.default({}),
 });
 
+/** `tunestra.local.yaml`: a level like the project, without the list of agents. */
+export const localConfigSchema = z.strictObject({
+  name: z.string().min(1).default('local'),
+  extends: z.array(z.string().min(1)).readonly().default([]),
+  exclude: excludeSchema.default({}),
+  overrides: overridesSchema.default({}),
+  env: envSchema.default({}),
+  permissions: permissionsSchema.default({}),
+});
+
 export const mcpServerSchema = z
   .strictObject({
     description: z.string().optional(),

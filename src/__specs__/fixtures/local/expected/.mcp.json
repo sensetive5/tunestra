@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "docs": {
+      "type": "http",
+      "url": "https://docs.example.com/mcp",
+      "headers": {
+        "X-Team": "frontend"
+      }
+    },
+    "tracker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "<tracker_mcp_package>"
+      ],
+      "env": {
+        "TRACKER_URL": "https://tracker.example.com",
+        "QUEUE": "TEAM"
+      }
+    }
+  }
+}

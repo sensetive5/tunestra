@@ -1,7 +1,14 @@
+import { renderAgentsIndex } from '../../generate/agents-index.ts';
 import { describeArtifactSource } from '../../generate/describe-source.ts';
 import { Agent } from '../../shared/constants/agents.ts';
+import { INSTRUCTIONS_FILE, LOCAL_CONFIG, LOCAL_DIR } from '../../shared/constants/files.ts';
 import { skillName } from '../../shared/schemas/preset.ts';
-import type { AgentAdapter, AgentPlanContext } from '../../shared/types/agent-adapter.ts';
+import type {
+  AgentAdapter,
+  AgentPlanContext,
+  LocalPlan,
+  LocalPlanContext,
+} from '../../shared/types/agent-adapter.ts';
 import type { Output, OutputFile, SetupPlan } from '../../shared/types/output.ts';
 import type { EnvVariable, McpServer, PermissionRule } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
@@ -22,6 +29,8 @@ const CONFIG_SOURCE = 'the rules/ and mcp/ folders and env of tunestra.yaml and 
 const EXEC_RULES_FILE = '.codex/rules/tunestra.rules';
 const EXEC_RULES_SOURCE = 'permissions in tunestra.yaml and its presets';
 const SUBAGENTS_DIR = '.codex/agents';
+const OVERRIDE_FILE = 'AGENTS.override.md';
+const OVERRIDE_SOURCE = `${LOCAL_CONFIG}, ${LOCAL_DIR}/ and the levels in ${INSTRUCTIONS_FILE}`;
 
 const INSTRUCTIONS_INTRO =
   'Rules of this project, ordered from specific to general. When two rules conflict, follow the one that comes first.';
@@ -39,6 +48,7 @@ const TRUST_NOTE =
 export const codexAdapter: AgentAdapter = {
   agent: Agent.Codex,
   plan: planCodex,
+  planLocal: planCodexLocal,
 };
 
 function planCodex(context: AgentPlanContext): SetupPlan {
@@ -132,6 +142,22 @@ function planCodex(context: AgentPlanContext): SetupPlan {
     ignoredPaths,
     protectedPaths: [],
     notes,
+    merges: [],
+  };
+}
+
+/**
+ * Codex reads `AGENTS.override.md` instead of AGENTS.md in the same folder, so the file
+ * holds the whole index with the personal level.
+ */
+function planCodexLocal(context: LocalPlanContext): LocalPlan {
+  const index = renderAgentsIndex(context.local);
+  const file = createFileOutput(OVERRIDE_FILE, index, OVERRIDE_SOURCE);
+
+  return {
+    outputs: [file],
+    ignoredPaths: [OVERRIDE_FILE],
+    merges: [],
   };
 }
 

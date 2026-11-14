@@ -1,3 +1,4 @@
+import { homedir } from 'node:os';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { SOURCES_DIR } from '../shared/constants/output.ts';
 import { TunestraError } from '../shared/errors/tunestra-error.ts';
@@ -5,6 +6,8 @@ import type { DownloadRepository, GitSource } from '../shared/types/source.ts';
 import { toPosixPath } from '../shared/utils/paths.ts';
 import { downloadRepository } from './download-repository.ts';
 import { describeGitSource, describeRepository, parseGitSource } from './parse-git-source.ts';
+
+const HOME_PREFIX = '~/';
 
 /** Turns references from `extends` into directories, downloading git sources when needed. */
 export type SourceResolver = {
@@ -70,7 +73,7 @@ export function createSourceResolver(
       return checkInside(repository, dir, ref);
     }
 
-    const dir = resolve(fromDir, ref);
+    const dir = resolveLocalPath(ref, fromDir);
     const repository = findRepository(fromDir);
 
     if (repository === undefined) {
@@ -123,4 +126,20 @@ function isInside(root: string, dir: string): boolean {
   const isOtherDrive = isAbsolute(path);
 
   return isParent === false && isOtherDrive === false;
+}
+
+/**
+ * A path from `extends`. `~/` starts at the home directory, so that a personal preset can
+ * live there; any other path starts at the directory that refers to it.
+ */
+function resolveLocalPath(ref: string, fromDir: string): string {
+  const isInHome = ref.startsWith(HOME_PREFIX);
+
+  if (isInHome) {
+    const path = ref.slice(HOME_PREFIX.length);
+
+    return resolve(homedir(), path);
+  }
+
+  return resolve(fromDir, ref);
 }

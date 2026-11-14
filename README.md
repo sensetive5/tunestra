@@ -94,7 +94,7 @@ The file name is the name of the subagent: lowercase letters, digits and single 
 
 ```yaml
 name: team                  # required, unique in the chain
-level: team                 # required: base | domain | team
+level: team                 # required: base | domain | team | local
 description: Frontend team conventions
 extends:                    # optional, from general to specific
   - ../base
@@ -127,11 +127,49 @@ exclude: {}
 overrides: {}
 ```
 
+### Personal level: `tunestra.local.yaml`
+
+A developer can tune the setup for themselves with `tunestra.local.yaml` and `.tunestra.local/`
+in the project; `tunestra init --local` creates both. tunestra always puts both in
+`.gitignore`. The personal level comes after the project, so it can add artifacts, override
+them by key and exclude them, like any other level.
+
+```yaml
+name: local                 # optional, defaults to local
+extends:                    # optional: personal presets with level: local
+  - ~/presets/me
+exclude:
+  skills: [storybook]
+env:
+  HTTPS_PROXY: http://localhost:3128
+permissions:
+  allow: [Bash(make *)]
+```
+
+A personal preset has `level: local` in its manifest and can be shared between your projects.
+The personal level can extend only such presets, and no shared level can extend them.
+
+The committed files stay the same for the whole team: AGENTS.md, CLAUDE.md and
+`.claude/settings.json` are built without the personal level. Every other generated file
+follows the chain with it. A personal level cannot exclude `env` or permissions, because
+Claude Code joins the personal settings with the committed ones and cannot remove a
+committed entry.
+
+| Agent | What it gets |
+|---|---|
+| Claude Code | `CLAUDE.local.md`, which it reads after CLAUDE.md: what the personal level adds, overrides and turns off. Personal `env` and permissions are added to `.claude/settings.local.json` |
+| Codex | `AGENTS.override.md`, which it reads instead of AGENTS.md: the whole index with the personal level |
+
+Claude Code writes `.claude/settings.local.json` too, for example when you allow a command for
+good. tunestra remembers which entries it added and changes only those: your settings and
+the rules of Claude Code stay. A variable that you changed by hand is yours and stays too.
+
 ### Sources
 
 | Reference | Example |
 |---|---|
 | Relative path | `../presets/team` (relative to the file that references it) |
+| Home directory | `~/presets/me`, for personal presets |
 | GitHub | `github:<owner>/<repo>/<path>#<ref>` |
 | GitLab | `gitlab:<owner>/<repo>/<path>#<ref>` |
 
@@ -200,6 +238,7 @@ For every agent:
 | `.agents/rules/<NN>-<level>-<key>.md` | Rule texts, ordered from specific to general | no |
 | `.agents/skills/<key>/` | Skills | no |
 | `.tunestra/state/` | What tunestra generated last time | no |
+| `AGENTS.override.md`, `CLAUDE.local.md` | The personal level, when there is one | no |
 | `.gitignore` | A block between `# >>> tunestra` and `# <<< tunestra` | yes |
 
 ### Claude Code
@@ -262,7 +301,7 @@ file can change only the model and the instructions. So Codex cannot make a suba
 read-only: tunestra turns off its shell (`features.shell_tool = false`) and asks it not to
 edit files in the instructions, and setup says so in a note.
 
-`<NN>` orders rules from specific to general: `10` project, `20` team, `30` domain, `40` base.
+`<NN>` orders rules from specific to general: `00` personal, `10` project, `20` team, `30` domain, `40` base.
 Level instructions get the key `instructions`, and the preset name when it differs from the
 level: `20-team-instructions.md`, but `20-team-instructions-frontend.md` for a `team` preset
 named `frontend`.
@@ -298,10 +337,11 @@ Generated files are never kept because of manual edits: change the sources inste
 | Command | What it does |
 |---|---|
 | `tunestra init` | Creates `tunestra.yaml`; `--extends <presets...>` fills `extends`. Moves a hand-written `AGENTS.md` to `.tunestra/AGENTS.md` and a `CLAUDE.md` with its own text to `.tunestra/rules/claude-md.md`; a `CLAUDE.md` that only imports `AGENTS.md` is removed |
+| `tunestra init --local` | Creates your personal level, `tunestra.local.yaml` and `.tunestra.local/rules/`, in a project with `tunestra.yaml`. `--extends` adds personal presets |
 | `tunestra setup` | Resolves the chain and regenerates every output |
 | `tunestra setup --dry-run` | Prints what would be written or removed, and the warnings |
 | `tunestra setup --verbose` | Also prints where every artifact comes from and what it overrides |
-| `tunestra uninstall` | Removes everything tunestra generated and its block in `.gitignore`; `tunestra.yaml` and `.tunestra/` stay. `--dry-run` shows the list first |
+| `tunestra uninstall` | Removes everything tunestra generated and its block in `.gitignore`, and takes its entries out of `.claude/settings.local.json`; the sources stay. `--dry-run` shows the list first |
 
 `tunestra setup` refuses to overwrite an `AGENTS.md` or `CLAUDE.md` that it did not generate
 and tells you where to move their text.
@@ -312,7 +352,7 @@ and tells you where to move their text.
 |---|---|
 | v0.1 | Inheritance for Claude Code |
 | v0.2 | Codex (this document) |
-| v0.3 | `env` and permissions, then subagents and a personal `local` level |
+| v0.3 | `env`, permissions, subagents and a personal `local` level |
 | v0.4 | Spaces, npm sources, lockfile |
 | v0.5 | `required` / `locked` policies, CI check |
 | v0.6 | Hooks |

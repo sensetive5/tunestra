@@ -8,7 +8,7 @@ export type Linearization = {
 };
 
 /**
- * Puts the levels in order with a depth-first walk from the project: parents first, in the
+ * Puts the levels in order with a depth-first walk from the root: parents first, in the
  * order of `extends`, then the level itself. A level that is reached twice is added once.
  */
 export function linearizeChain(graph: PresetGraph): Linearization {
@@ -51,7 +51,7 @@ export function linearizeChain(graph: PresetGraph): Linearization {
     levels.push(level);
   };
 
-  visit(graph.project.dir, []);
+  visit(graph.root.dir, []);
 
   return {
     levels,

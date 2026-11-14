@@ -5,5 +5,7 @@
 /.claude/commands/
 /.claude/agents/
 /.mcp.json
+/tunestra.local.yaml
+/.tunestra.local/
 /.tunestra/state/
 # <<< tunestra

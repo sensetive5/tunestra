@@ -1,0 +1,6 @@
+name: me
+level: local
+description: Personal preferences for every project
+permissions:
+  allow:
+    - Bash(make *)

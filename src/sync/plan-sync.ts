@@ -5,6 +5,7 @@ import { isString } from '../shared/utils/guards.ts';
 import { mapSettled } from '../shared/utils/settled.ts';
 import { checkOutput } from './check-output.ts';
 import { checkStaleOutput } from './check-stale-output.ts';
+import { planMerges } from './plan-merges.ts';
 
 /** What setup will do on the disk, after comparing the plan with the last setup. */
 export type SyncPlan = {
@@ -33,11 +34,13 @@ export async function planSync(
   const staleEntries = previousEntries.filter(([path]) => outputPaths.has(path) === false);
 
   const outputChecks = await mapSettled(plan.outputs, (output) => checkOutput(output, context));
+  const mergePlan = await planMerges(projectDir, plan.merges, previous.merges);
   const staleChecks = await mapSettled(staleEntries, ([path, record]) =>
     checkStaleOutput(projectDir, path, record),
   );
 
-  const removals = staleChecks.filter((check) => check.isRemovable).map((check) => check.path);
+  const staleRemovals = staleChecks.filter((check) => check.isRemovable).map((check) => check.path);
+  const removals = [...staleRemovals, ...mergePlan.removals];
   const checks = [...outputChecks, ...staleChecks];
   const warnings = checks.map((check) => check.warning).filter(isString);
   const recordEntries = outputChecks.map((check): [string, OutputRecord] => [
@@ -48,10 +51,13 @@ export async function planSync(
   const state = {
     version: STATE_VERSION,
     outputs: records,
+    merges: mergePlan.records,
   };
+  // Merged files are not records: people and the agent change them too.
+  const outputs = [...plan.outputs, ...mergePlan.writes];
 
   return {
-    outputs: plan.outputs,
+    outputs,
     removals,
     warnings,
     state,

@@ -12,7 +12,7 @@ import { joinNames } from './describe-origin.ts';
  * instructions become `instructions`, with the preset name when it differs from the level.
  */
 export function buildRuleFileName(rule: ResolvedArtifact<Rule>): string {
-  const rank = LEVEL_RANK[rule.origin.level];
+  const rank = String(LEVEL_RANK[rule.origin.level]).padStart(2, '0');
   const slug = buildRuleSlug(rule);
 
   return `${rank}-${rule.origin.level}-${slug}.md`;

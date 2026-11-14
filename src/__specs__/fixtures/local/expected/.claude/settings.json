@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "API_BASE_URL": "https://api.example.com",
+    "MCP_TIMEOUT": "300000",
+    "OTEL_LOGS_EXPORTER": "none"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm test *)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Read(./.env)"
+    ]
+  }
+}
