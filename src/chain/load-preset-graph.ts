@@ -1,22 +1,22 @@
 import { loadPreset } from '../presets/load-preset.ts';
-import type { Preset, Project } from '../shared/types/preset.ts';
+import type { Preset } from '../shared/types/preset.ts';
 import { mapSettled } from '../shared/utils/settled.ts';
 import type { SourceResolver } from '../sources/create-source-resolver.ts';
 import type { PresetGraph } from './preset-graph.ts';
 
 /**
- * Loads the presets of the project, then the presets they extend, and so on. Each step loads
+ * Loads the presets of the root, then the presets they extend, and so on. Each step loads
  * its presets in parallel; a preset that several levels extend is loaded once.
  */
 export async function loadPresetGraph(
-  project: Project,
+  root: Preset,
   resolver: SourceResolver,
 ): Promise<PresetGraph> {
   const levels = new Map<string, Preset>();
   const parents = new Map<string, ReadonlyArray<string>>();
-  let pending: ReadonlyArray<Preset> = [project];
+  let pending: ReadonlyArray<Preset> = [root];
 
-  levels.set(project.dir, project);
+  levels.set(root.dir, root);
 
   while (pending.length > 0) {
     const dirsToLoad = new Set<string>();
@@ -47,7 +47,7 @@ export async function loadPresetGraph(
   }
 
   return {
-    project,
+    root,
     levels,
     parents,
   };

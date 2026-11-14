@@ -15,10 +15,16 @@ program
   .command('init')
   .description('Create tunestra.yaml and move hand-written AGENTS.md and CLAUDE.md to .tunestra/')
   .option('--extends <presets...>', 'presets to extend, from general to specific', [])
+  .option(
+    '--local',
+    'create only your personal level: tunestra.local.yaml and .tunestra.local/',
+    false,
+  )
   .action(async (options) => {
     const projectDir = process.cwd();
     const initOptions = {
       presets: options.extends,
+      local: options.local,
     };
 
     await runCommand(() => describeInit(projectDir, initOptions));

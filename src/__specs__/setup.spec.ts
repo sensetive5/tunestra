@@ -43,11 +43,21 @@ function resolveOutputName(file: string): string {
   return RENAMED[file] ?? file;
 }
 
-function isGenerated(file: string, inputFiles: ReadonlyArray<string>): boolean {
+/** An input file counts as output too, when setup changes it, like `settings.local.json`. */
+function isGenerated(
+  file: string,
+  inputFiles: ReadonlyArray<string>,
+  expectedFiles: ReadonlyArray<string>,
+): boolean {
   const isInput = inputFiles.includes(file);
+  const isExpected = expectedFiles.includes(file);
   const isState = file.startsWith(STATE_DIR);
 
-  return isInput === false && isState === false;
+  if (isState) {
+    return false;
+  }
+
+  return isInput === false || isExpected;
 }
 
 async function runFixture(name: string): Promise<void> {
@@ -67,7 +77,9 @@ async function runFixture(name: string): Promise<void> {
   const expectedFiles = await listFiles(expectedDir);
   const expectedOutput = expectedFiles.map(resolveOutputName).sort();
   const projectFiles = await listFiles(project);
-  const generatedFiles = projectFiles.filter((file) => isGenerated(file, inputFiles));
+  const generatedFiles = projectFiles.filter((file) =>
+    isGenerated(file, inputFiles, expectedOutput),
+  );
 
   expect(generatedFiles).toEqual(expectedOutput);
 
@@ -101,5 +113,9 @@ describe('fixtures', () => {
 
   it('codex', async () => {
     await runFixture('codex');
+  });
+
+  it('local', async () => {
+    await runFixture('local');
   });
 });

@@ -1,9 +1,10 @@
-import type { Preset, Project } from '../shared/types/preset.ts';
+import type { Preset } from '../shared/types/preset.ts';
 
-/** Every level reachable from the project through `extends`, before it is put in order. */
+/** Every level reachable from the root through `extends`, before it is put in order. */
 export type PresetGraph = {
-  project: Project;
-  /** Every level by its directory, the project included. */
+  /** The project, or the personal level of the developer. */
+  root: Preset;
+  /** Every level by its directory, the root included. */
   levels: ReadonlyMap<string, Preset>;
   /** Directories of the presets that a level extends, in the order of its `extends`. */
   parents: ReadonlyMap<string, ReadonlyArray<string>>;

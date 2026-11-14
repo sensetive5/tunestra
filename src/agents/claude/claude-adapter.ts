@@ -1,17 +1,24 @@
 import { posix } from 'node:path';
 import { describeArtifactSource, SETUP_SOURCE } from '../../generate/describe-source.ts';
+import { renderLocalChanges } from '../../generate/local-changes.ts';
 import { Agent } from '../../shared/constants/agents.ts';
-import { INSTRUCTIONS_FILE } from '../../shared/constants/files.ts';
+import { INSTRUCTIONS_FILE, LOCAL_CONFIG, LOCAL_DIR } from '../../shared/constants/files.ts';
+import { Level } from '../../shared/constants/levels.ts';
 import { AGENTS_SKILLS_DIR, GENERATED_NOTICE, OutputKind } from '../../shared/constants/output.ts';
 import { createProblemsError } from '../../shared/errors/create-problems-error.ts';
-import type { AgentAdapter, AgentPlanContext } from '../../shared/types/agent-adapter.ts';
+import type {
+  AgentAdapter,
+  AgentPlanContext,
+  LocalPlan,
+  LocalPlanContext,
+} from '../../shared/types/agent-adapter.ts';
 import type { Output, OutputFile, SetupPlan } from '../../shared/types/output.ts';
 import type { EnvVariable, PermissionRule, Skill } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
 import { createFileOutput } from '../../shared/utils/outputs.ts';
 import { isIgnoredByClaude } from './ignored-env.ts';
 import { renderMcpJson } from './mcp-json.ts';
-import { renderSettingsJson, SETTINGS_KEYS } from './settings-json.ts';
+import { buildSettingsEntries, renderSettingsJson, SETTINGS_KEYS } from './settings-json.ts';
 import { renderSubagentMd } from './subagent-md.ts';
 
 const CLAUDE_FILE = 'CLAUDE.md';
@@ -24,6 +31,8 @@ const MCP_SOURCE = 'the mcp/ folders of tunestra.yaml and its presets';
 const SETTINGS_FILE = '.claude/settings.json';
 const SETTINGS_SOURCE = 'env and permissions in tunestra.yaml and its presets';
 const LOCAL_SETTINGS_FILE = '.claude/settings.local.json';
+const LOCAL_CLAUDE_FILE = 'CLAUDE.local.md';
+const LOCAL_SOURCE = `${LOCAL_CONFIG} and ${LOCAL_DIR}/`;
 
 /**
  * Claude Code reads CLAUDE.md, so it imports AGENTS.md. Rules are copied to `.claude/rules`,
@@ -35,7 +44,48 @@ const LOCAL_SETTINGS_FILE = '.claude/settings.local.json';
 export const claudeAdapter: AgentAdapter = {
   agent: Agent.Claude,
   plan: planClaude,
+  planLocal: planClaudeLocal,
 };
+
+/**
+ * Claude Code reads `CLAUDE.local.md` after CLAUDE.md, so it says what the personal level
+ * changes. Personal env and permissions are added to `.claude/settings.local.json`, which
+ * Claude Code applies over the committed settings; the entries of people and of Claude
+ * Code itself stay.
+ */
+function planClaudeLocal(context: LocalPlanContext): LocalPlan {
+  const { shared, local } = context;
+  const content = renderLocalChanges(shared, local);
+  const localFile = createFileOutput(LOCAL_CLAUDE_FILE, content, LOCAL_SOURCE);
+  const env = local.env.filter(isFromLocal);
+  const permissions = local.permissions.filter(isFromLocal);
+  const hasSettings = env.length > 0 || permissions.length > 0;
+
+  if (hasSettings === false) {
+    return {
+      outputs: [localFile],
+      ignoredPaths: [LOCAL_CLAUDE_FILE],
+      merges: [],
+    };
+  }
+
+  const entries = buildSettingsEntries(env, permissions);
+  const merge = {
+    path: LOCAL_SETTINGS_FILE,
+    source: LOCAL_SOURCE,
+    entries,
+  };
+
+  return {
+    outputs: [localFile],
+    ignoredPaths: [LOCAL_CLAUDE_FILE, LOCAL_SETTINGS_FILE],
+    merges: [merge],
+  };
+}
+
+function isFromLocal<TArtifact>(resolved: ResolvedArtifact<TArtifact>): boolean {
+  return resolved.origin.level === Level.Local;
+}
 
 function planClaude(context: AgentPlanContext): SetupPlan {
   const { resolution, ruleFiles } = context;
@@ -95,6 +145,7 @@ function planClaude(context: AgentPlanContext): SetupPlan {
     ],
     protectedPaths,
     notes: [],
+    merges: [],
   };
 }
 

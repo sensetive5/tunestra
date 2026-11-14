@@ -25,6 +25,7 @@ export function createEmptyState(): SetupState {
   return {
     version: STATE_VERSION,
     outputs: {},
+    merges: {},
   };
 }
 

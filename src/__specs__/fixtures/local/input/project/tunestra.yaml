@@ -1,0 +1,10 @@
+name: project
+extends:
+  - ../presets/team
+agents: [claude, codex]
+exclude:
+  env: [NODE_OPTIONS]
+  permissions: [Bash(npm run lint)]
+  subagents: [researcher]
+env:
+  API_BASE_URL: https://api.example.com

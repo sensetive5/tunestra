@@ -1,5 +1,6 @@
 import { Agent } from '../shared/constants/agents.ts';
-import { PROJECT_CONFIG } from '../shared/constants/files.ts';
+import { LOCAL_CONFIG, PROJECT_CONFIG } from '../shared/constants/files.ts';
+import { Level } from '../shared/constants/levels.ts';
 import { AGENTS_RULES_DIR, AGENTS_SKILLS_DIR } from '../shared/constants/output.ts';
 import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { Chain } from '../shared/types/chain.ts';
@@ -150,12 +151,12 @@ export function renderEnv(env: ReadonlyArray<ResolvedArtifact<EnvVariable>>): st
   return renderSection('Environment', ENV_INTRO, table);
 }
 
-/** The project shows its config file; a preset shows its git reference or its path. */
+/** The project and the personal level show their config files; a preset shows its git reference or its path. */
 function describeLevelSource(chain: Chain, level: Preset): string {
-  const isProject = level.dir === chain.project.dir;
+  const isInProject = level.dir === chain.project.dir;
 
-  if (isProject) {
-    return PROJECT_CONFIG;
+  if (isInProject) {
+    return level.level === Level.Local ? LOCAL_CONFIG : PROJECT_CONFIG;
   }
 
   if (typeof level.remote === 'string') {

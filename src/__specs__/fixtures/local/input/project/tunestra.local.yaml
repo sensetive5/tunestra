@@ -1,0 +1,7 @@
+extends:
+  - ../me
+exclude:
+  skills: [storybook]
+env:
+  MCP_TIMEOUT: 600000
+  HTTPS_PROXY: http://localhost:3128

@@ -1,4 +1,5 @@
 import { PermissionDecision } from '../../shared/constants/permissions.ts';
+import type { SettingsEntries } from '../../shared/types/output.ts';
 import type { EnvVariable, PermissionRule } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
 import { buildEnvMap } from '../../shared/utils/env.ts';
@@ -34,6 +35,25 @@ export function renderSettingsJson(settings: ClaudeSettings): string {
   const json = JSON.stringify(content, null, 2);
 
   return `${json}\n`;
+}
+
+/** Every list, empty ones included, for entries that setup adds to a file of people. */
+export function buildSettingsEntries(
+  env: ReadonlyArray<ResolvedArtifact<EnvVariable>>,
+  permissions: ReadonlyArray<ResolvedArtifact<PermissionRule>>,
+): SettingsEntries {
+  const envMap = buildEnvMap(env);
+  const lists = buildPermissionLists(permissions);
+  const permissionLists = {
+    [PermissionDecision.Allow]: lists[PermissionDecision.Allow] ?? [],
+    [PermissionDecision.Ask]: lists[PermissionDecision.Ask] ?? [],
+    [PermissionDecision.Deny]: lists[PermissionDecision.Deny] ?? [],
+  };
+
+  return {
+    env: envMap,
+    permissions: permissionLists,
+  };
 }
 
 /** Only the lists that have rules; a rule repeated on several levels is written once. */

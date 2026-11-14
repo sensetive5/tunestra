@@ -8,5 +8,7 @@
 /.codex/config.toml
 /.codex/rules/tunestra.rules
 /.codex/agents/
+/tunestra.local.yaml
+/.tunestra.local/
 /.tunestra/state/
 # <<< tunestra

@@ -1,4 +1,5 @@
 import { loadChain } from '../chain/load-chain.ts';
+import { loadLocalChain } from '../chain/load-local-chain.ts';
 import { planSetup } from '../generate/plan-setup.ts';
 import { applyInheritance } from '../inheritance/apply-inheritance.ts';
 import type { SetupPlan } from '../shared/types/output.ts';
@@ -9,6 +10,7 @@ import { planSync, type SyncPlan } from '../sync/plan-sync.ts';
 import { updateGitignoreFile } from './update-gitignore-file.ts';
 
 export type SetupReport = {
+  /** With the personal level, when the project has one. */
   resolution: Resolution;
   plan: SetupPlan;
   sync: SyncPlan;
@@ -25,8 +27,11 @@ export type SetupOptions = {
  */
 export async function runSetup(projectDir: string, options: SetupOptions): Promise<SetupReport> {
   const chain = await loadChain(projectDir);
-  const resolution = applyInheritance(chain);
-  const plan = planSetup(resolution);
+  const localChain = await loadLocalChain(chain);
+  const sharedResolution = applyInheritance(chain);
+  const localResolution = localChain === undefined ? undefined : applyInheritance(localChain);
+  const resolution = localResolution ?? sharedResolution;
+  const plan = planSetup(sharedResolution, localResolution);
   const previous = await readState(chain.project.dir);
   const sync = await planSync(chain.project.dir, plan, previous);
 

@@ -1,4 +1,5 @@
 import type { OutputKind } from '../constants/output.ts';
+import type { PermissionDecision } from '../constants/permissions.ts';
 
 /**
  * `path` is relative to the project directory. `source` tells people what to edit instead
@@ -35,6 +36,22 @@ export type OutputSymlink = OutputBase<typeof OutputKind.Symlink> & {
 
 export type Output = OutputFile | OutputCopy | OutputSymlink;
 
+/** Environment variables and permission rules in the shape of Claude Code settings. */
+export type SettingsEntries = {
+  env: Readonly<Record<string, string>>;
+  permissions: Readonly<Record<PermissionDecision, ReadonlyArray<string>>>;
+};
+
+/**
+ * Entries that tunestra adds to a JSON settings file that people and the agent also write,
+ * like `.claude/settings.local.json`. Setup changes only the entries it added last time.
+ */
+export type SettingsMerge = {
+  path: string;
+  source: string;
+  entries: SettingsEntries;
+};
+
 /** Everything `tunestra setup` writes, before it touches the disk. */
 export type SetupPlan = {
   outputs: ReadonlyArray<Output>;
@@ -44,4 +61,5 @@ export type SetupPlan = {
   protectedPaths: ReadonlyArray<string>;
   /** Hints for people about what the agent needs or what it cannot use. */
   notes: ReadonlyArray<string>;
+  merges: ReadonlyArray<SettingsMerge>;
 };

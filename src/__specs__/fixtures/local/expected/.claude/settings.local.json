@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls *)",
+      "Bash(make *)"
+    ]
+  },
+  "spinnerTipsEnabled": false,
+  "env": {
+    "HTTPS_PROXY": "http://localhost:3128",
+    "MCP_TIMEOUT": "600000"
+  }
+}

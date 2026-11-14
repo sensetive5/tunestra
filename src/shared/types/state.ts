@@ -1,3 +1,5 @@
+import type { SettingsEntries } from './output.ts';
+
 /** A generated file is recorded by the hash of its content. */
 export type FileRecord = {
   hash: string;
@@ -14,4 +16,6 @@ export type OutputRecord = FileRecord | SymlinkRecord;
 export type SetupState = {
   version: number;
   outputs: Readonly<Record<string, OutputRecord>>;
+  /** The entries that setup added to settings files of people, by path. */
+  merges: Readonly<Record<string, SettingsEntries>>;
 };
