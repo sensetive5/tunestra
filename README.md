@@ -9,10 +9,10 @@
 > Tune your AI agents to play as one orchestra.
 
 > [!WARNING]
-> **Early version.** tunestra supports Claude Code and Codex. The formats may still change
+> **Early version.** tunestra supports Claude Code, Codex and Cursor. The formats may still change
 > before v1.0.
 
-tunestra gives Claude Code, Codex and other AI coding agents **one shared source** of rules,
+tunestra gives Claude Code, Codex, Cursor and other AI coding agents **one shared source** of rules,
 skills, commands, MCP servers, environment variables and permissions, and generates each
 agent's native configuration from it.
 
@@ -42,7 +42,7 @@ npx tunestra setup    # generates AGENTS.md and the configuration of every agent
 ```yaml
 extends:
   - github:<organisation_name>/<presets_repo>/team#v1
-agents: [claude]            # add codex: [claude, codex]
+agents: [claude]            # add more: [claude, codex, cursor]
 ```
 
 Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md`, `CLAUDE.md` and, when presets set `env` or
@@ -122,7 +122,7 @@ as a preset.
 name: my-service            # optional, defaults to the directory name
 extends:
   - ../presets/team
-agents: [claude, codex]     # claude, codex; defaults to [claude]
+agents: [claude, codex]     # claude, codex, cursor; defaults to [claude]
 exclude: {}
 overrides: {}
 ```
@@ -159,6 +159,7 @@ committed entry.
 |---|---|
 | Claude Code | `CLAUDE.local.md`, which it reads after CLAUDE.md: what the personal level adds, overrides and turns off. Personal `env` and permissions are added to `.claude/settings.local.json` |
 | Codex | `AGENTS.override.md`, which it reads instead of AGENTS.md: the whole index with the personal level |
+| Cursor | Personal rules in `.cursor/rules/tunestra/`, and `00-personal-setup.mdc` with the same text as `CLAUDE.local.md` |
 
 Claude Code writes `.claude/settings.local.json` too, for example when you allow a command for
 good. tunestra remembers which entries it added and changes only those: your settings and
@@ -301,6 +302,42 @@ file can change only the model and the instructions. So Codex cannot make a suba
 read-only: tunestra turns off its shell (`features.shell_tool = false`) and asks it not to
 edit files in the instructions, and setup says so in a note.
 
+### Cursor
+
+Cursor reads `AGENTS.md`, but it does not follow the links in it, so tunestra gives it the
+rules as `.mdc` files. Cursor also reads `.agents/skills/` by itself.
+
+| Path | Content | Committed |
+|---|---|---|
+| `.cursor/rules/tunestra/<NN>-<level>-<key>.mdc` | Copies of the rules with `alwaysApply: true`; Cursor loads them in every chat | no |
+| `.agents/skills/<command>/` | Each command as a skill that runs only when you call it: `/release-notes`. Codex and Cursor share this file | no |
+| `.cursor/agents/<key>.md` | Subagents | no |
+| `.cursor/mcp.json` | MCP servers | no |
+| `.cursor/cli.json` | `allow` and `deny` rules for the Cursor CLI | no |
+
+Cursor skips rules in a directory that `.gitignore` lists, so tunestra lists the rule files
+with `/.cursor/rules/tunestra/*` instead of the directory.
+
+The Cursor CLI reads `.cursor/cli.json`; the editor does not, so set the allowlist of the
+editor in the settings of the agent. tunestra converts the rules of Claude Code:
+
+| Claude Code | Cursor CLI |
+|---|---|
+| `Bash(git push *)` | `Shell(git:push *)` |
+| `Bash(npm run lint)` | `Shell(npm:run lint)`, only this command |
+| `Read(./.env)` | `Read(.env)` |
+| `Edit(//etc/**)` | `Write(/etc/**)` |
+| `WebFetch(domain:docs.github.com)` | `WebFetch(docs.github.com)` |
+| `mcp__docs__search` | `Mcp(docs:search)` |
+
+The Cursor CLI has no `ask` list, so `ask` rules are skipped with a note. Rules with shell
+syntax, a wildcard in the command name or a path in your home directory are skipped too.
+tunestra owns the whole `.cursor/cli.json`; keep your personal settings in
+`~/.cursor/cli-config.json`.
+
+Cursor has no project `env` and no reasoning effort for subagents: setup skips them with a
+note. A read-only subagent gets `readonly: true` and runs without tools that change files.
+
 `<NN>` orders rules from specific to general: `00` personal, `10` project, `20` team, `30` domain, `40` base.
 Level instructions get the key `instructions`, and the preset name when it differs from the
 level: `20-team-instructions.md`, but `20-team-instructions-frontend.md` for a `team` preset
@@ -314,8 +351,9 @@ Every generated rule starts with its origin:
 ```
 
 Skills and commands are copied as is: their frontmatter must stay on the first line. For
-Codex, a command gets only `name` and `description` in its frontmatter; other fields, like
-`argument-hint`, are for Claude Code.
+Codex and Cursor, a command gets only `name`, `description` and
+`disable-model-invocation: true` in its frontmatter; other fields, like `argument-hint`, are
+for Claude Code.
 
 ## Running setup again
 
@@ -352,7 +390,7 @@ and tells you where to move their text.
 |---|---|
 | v0.1 | Inheritance for Claude Code |
 | v0.2 | Codex (this document) |
-| v0.3 | `env`, permissions, subagents and a personal `local` level |
+| v0.3 | `env`, permissions, subagents, a personal `local` level and Cursor |
 | v0.4 | Spaces, npm sources, lockfile |
 | v0.5 | `required` / `locked` policies, CI check |
 | v0.6 | Hooks |

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Mcp(docs:search)",
+      "Shell(npm:test *)",
+      "WebFetch(docs.github.com)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Shell(rm:-rf *)",
+      "Write(/etc/**)"
+    ]
+  }
+}

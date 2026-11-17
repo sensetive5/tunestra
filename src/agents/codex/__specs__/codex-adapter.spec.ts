@@ -38,7 +38,9 @@ describe('codexAdapter', () => {
 
     const skill = await readFile(skillPath, 'utf8');
     const policy = await readFile(policyPath, 'utf8');
-    expect(skill).toBe('---\nname: release-notes\ndescription: Draft notes\n---\nDraft.\n');
+    expect(skill).toBe(
+      '---\nname: release-notes\ndescription: Draft notes\ndisable-model-invocation: true\n---\nDraft.\n',
+    );
     expect(policy).toContain('allow_implicit_invocation: false');
   });
 
@@ -83,7 +85,9 @@ describe('codexAdapter', () => {
     await runSetup(projectDir, { dryRun: false });
 
     const skill = await readFile(skillPath, 'utf8');
-    expect(skill).toBe('---\nname: hello\ndescription: The /hello command\n---\nSay hello.\n');
+    expect(skill).toBe(
+      '---\nname: hello\ndescription: The /hello command\ndisable-model-invocation: true\n---\nSay hello.\n',
+    );
   });
 
   it('stops when a command and a skill have the same name', async () => {
