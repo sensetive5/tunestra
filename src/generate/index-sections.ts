@@ -24,7 +24,7 @@ const HIERARCHY_INTRO =
   'Instructions are ordered from specific to general. When two instructions conflict, follow the one from the higher level in this list.';
 
 const RULES_INTRO =
-  'Always follow these rules. Claude Code and Codex load them automatically; other agents should read them before starting work.';
+  'Always follow these rules. Claude Code, Codex and Cursor load them automatically; other agents should read them before starting work.';
 
 const SKILLS_INTRO = 'Use a skill when the task matches its description.';
 
@@ -108,6 +108,9 @@ function describeCommandCall(agent: Agent): string | undefined {
     case Agent.Codex:
       // Codex has no project commands; tunestra gives it each command as a skill.
       return 'In Codex, a command is a skill with the same name: call it as `$<name>`.';
+    case Agent.Cursor:
+      // Cursor gets each command as a skill too, and calls it the same way.
+      return undefined;
     default: {
       // A new agent without a case here does not compile.
       const unknownAgent: never = agent;

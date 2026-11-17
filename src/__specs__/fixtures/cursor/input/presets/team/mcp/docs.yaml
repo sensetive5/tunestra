@@ -1,0 +1,5 @@
+description: Library docs
+type: http
+url: https://docs.example.com/mcp
+headers:
+  X-Team: frontend

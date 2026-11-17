@@ -1,8 +1,8 @@
 import { renderAgentsIndex } from '../../generate/agents-index.ts';
+import { planCommandSkill, selectCommandSkills } from '../../generate/command-skill.ts';
 import { describeArtifactSource } from '../../generate/describe-source.ts';
 import { Agent } from '../../shared/constants/agents.ts';
 import { INSTRUCTIONS_FILE, LOCAL_CONFIG, LOCAL_DIR } from '../../shared/constants/files.ts';
-import { skillName } from '../../shared/schemas/preset.ts';
 import type {
   AgentAdapter,
   AgentPlanContext,
@@ -13,7 +13,7 @@ import type { Output, OutputFile, SetupPlan } from '../../shared/types/output.ts
 import type { EnvVariable, McpServer, PermissionRule } from '../../shared/types/preset.ts';
 import type { ResolvedArtifact } from '../../shared/types/resolution.ts';
 import { createFileOutput } from '../../shared/utils/outputs.ts';
-import { planCommandSkill } from './command-skill.ts';
+import { planCommandPolicy } from './command-policy.ts';
 import { renderConfigToml } from './config-toml.ts';
 import {
   convertBashRule,
@@ -57,22 +57,14 @@ function planCodex(context: AgentPlanContext): SetupPlan {
   const notes: Array<string> = [];
   const outputs: Array<Output> = [];
 
-  const commands = resolution.commands.filter((command) => {
-    const isSkillName = skillName.safeParse(command.artifact.key).success;
+  const commandSkills = selectCommandSkills('Codex', resolution.commands);
+  const commandFiles = commandSkills.commands.flatMap((command) => [
+    planCommandSkill(projectDir, command),
+    planCommandPolicy(projectDir, command),
+  ]);
 
-    if (isSkillName) {
-      return true;
-    }
-
-    notes.push(
-      `Codex skips the command "${command.artifact.key}": a skill name needs lowercase letters, digits and single hyphens.`,
-    );
-
-    return false;
-  });
-  const commandSkills = commands.flatMap((command) => planCommandSkill(projectDir, command));
-
-  outputs.push(...commandSkills);
+  notes.push(...commandSkills.notes);
+  outputs.push(...commandFiles);
 
   const servers = resolution.mcp.filter((server) => {
     const isSse = server.artifact.config.type === 'sse';

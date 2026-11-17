@@ -111,7 +111,8 @@ function planChain(resolution: Resolution): SetupPlan {
  */
 function finishPlan(plan: SetupPlan): SetupPlan {
   const ignoredPaths = [...plan.ignoredPaths, LOCAL_CONFIG, `${LOCAL_DIR}/`, `${STATE_DIR}/`];
-  const problems = findPathConflicts(plan.outputs);
+  const outputs = removeSameOutputs(plan.outputs);
+  const problems = findPathConflicts(outputs);
 
   if (problems.length > 0) {
     throw createProblemsError(problems);
@@ -119,8 +120,27 @@ function finishPlan(plan: SetupPlan): SetupPlan {
 
   return {
     ...plan,
+    outputs,
     ignoredPaths,
   };
+}
+
+/** Agents can share a file, like the skill of a command; the same file is written once. */
+function removeSameOutputs(outputs: ReadonlyArray<Output>): ReadonlyArray<Output> {
+  const contents = new Map<string, string>();
+
+  return outputs.filter((output) => {
+    if (output.kind !== OutputKind.File) {
+      return true;
+    }
+
+    const content = contents.get(output.path);
+    const isSame = content === output.content;
+
+    contents.set(output.path, output.content);
+
+    return isSame === false;
+  });
 }
 
 function planRuleFile(projectDir: string, rule: ResolvedArtifact<Rule>): OutputFile {

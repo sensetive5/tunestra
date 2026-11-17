@@ -60,12 +60,12 @@ describe('loadSubagents', () => {
   it('rejects a model for an unknown agent', async () => {
     const dir = await createTree({
       'agents/reviewer.md':
-        '---\ndescription: Reviews diffs\nmodel:\n  cursor: auto\n---\nReview.\n',
+        '---\ndescription: Reviews diffs\nmodel:\n  windsurf: auto\n---\nReview.\n',
     });
 
     const result = loadSubagents(dir);
 
-    await expect(result).rejects.toThrow('cursor');
+    await expect(result).rejects.toThrow('windsurf');
   });
 
   it('rejects an effort that one of the agents does not accept', async () => {

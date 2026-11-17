@@ -1,0 +1,17 @@
+name: project
+extends:
+  - ../presets/team
+agents: [claude, codex, cursor]
+exclude:
+  env: [NODE_OPTIONS]
+  permissions: [Bash(npm run lint)]
+  subagents: [researcher]
+env:
+  API_BASE_URL: https://api.example.com
+permissions:
+  allow:
+    - WebFetch(domain:docs.github.com)
+    - mcp__docs__search
+  deny:
+    - Edit(//etc/**)
+    - Bash(npm publish && git push)

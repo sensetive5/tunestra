@@ -16,7 +16,7 @@ Instructions are ordered from specific to general. When two instructions conflic
 
 ## Rules
 
-Always follow these rules. Claude Code and Codex load them automatically; other agents should read them before starting work.
+Always follow these rules. Claude Code, Codex and Cursor load them automatically; other agents should read them before starting work.
 
 | Rule | Level | Description | File |
 |---|---|---|---|

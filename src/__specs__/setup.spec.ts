@@ -115,6 +115,10 @@ describe('fixtures', () => {
     await runFixture('codex');
   });
 
+  it('cursor', async () => {
+    await runFixture('cursor');
+  });
+
   it('local', async () => {
     await runFixture('local');
   });
