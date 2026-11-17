@@ -1,5 +1,11 @@
 # tunestra
 
+## 0.7.0
+
+### Minor Changes
+
+- ceff078: Add Cursor: add `cursor` to `agents` to get rules in `.cursor/rules/`, commands as skills, subagents, MCP servers and permissions for the Cursor CLI.
+
 ## 0.6.0
 
 ### Minor Changes
