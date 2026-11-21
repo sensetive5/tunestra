@@ -15,3 +15,6 @@ export const LOCAL_DIR = '.tunestra.local';
 
 /** Main instructions of a level, and the index that tunestra generates. */
 export const INSTRUCTIONS_FILE = 'AGENTS.md';
+
+/** Exact commits of git sources; tunestra writes it, and the team commits it. */
+export const LOCK_FILE = 'tunestra.lock.yaml';

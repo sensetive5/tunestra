@@ -23,7 +23,7 @@ export async function loadLocalChain(
     return undefined;
   }
 
-  const resolver = createSourceResolver(shared.project.dir, options.download);
+  const resolver = options.resolver ?? createSourceResolver(shared.project.dir);
   const graph = await loadPresetGraph(local, resolver);
   const linearization = linearizeChain(graph);
   const levels = [...shared.levels, ...linearization.levels];

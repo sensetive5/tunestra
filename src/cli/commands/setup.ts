@@ -1,5 +1,7 @@
 import pc from 'picocolors';
+import { type LockChange, LockChangeKind, type LockPlan } from '../../lock/plan-lock.ts';
 import { runSetup, type SetupOptions } from '../../setup/run-setup.ts';
+import { LOCK_FILE } from '../../shared/constants/files.ts';
 import type { SetupPlan } from '../../shared/types/output.ts';
 import type { SyncPlan } from '../../sync/plan-sync.ts';
 import { describeResolution } from './describe-resolution.ts';
@@ -14,7 +16,7 @@ export async function describeSetup(
   options: SetupCommandOptions,
 ): Promise<string> {
   const report = await runSetup(projectDir, options);
-  const summary = describeSync(report.plan, report.sync, options);
+  const summary = describeSync(report.plan, report.sync, report.lock, options);
 
   if (options.verbose) {
     const resolution = describeResolution(report.resolution);
@@ -27,11 +29,17 @@ ${summary}`;
   return summary;
 }
 
-function describeSync(plan: SetupPlan, sync: SyncPlan, options: SetupOptions): string {
+function describeSync(
+  plan: SetupPlan,
+  sync: SyncPlan,
+  lock: LockPlan,
+  options: SetupOptions,
+): string {
   const warningIcon = pc.yellow('⚠');
   const lines = sync.warnings.map((warning) => `${warningIcon} ${warning}`);
   const noteIcon = pc.cyan('ℹ');
-  const notes = plan.notes.map((note) => `${noteIcon} ${note}`);
+  const lockNotes = lock.changes.map(describeLockChange);
+  const notes = [...lockNotes, ...plan.notes].map((note) => `${noteIcon} ${note}`);
   const writeCount = sync.outputs.length;
   const removeCount = sync.removals.length;
 
@@ -45,13 +53,34 @@ function describeSync(plan: SetupPlan, sync: SyncPlan, options: SetupOptions): s
   }
 
   const check = pc.green('✔');
-  const committedFiles = joinList(plan.protectedPaths);
+  const hasLockFile = Object.keys(lock.sources).length > 0;
+  const committedPaths = hasLockFile ? [...plan.protectedPaths, LOCK_FILE] : plan.protectedPaths;
+  const committedFiles = joinList(committedPaths);
 
   lines.push(`${check} Generated ${writeCount} files, removed ${removeCount} stale files.`);
   lines.push(...notes);
   lines.push(`Commit ${committedFiles}; the rest is in .gitignore.`);
 
   return lines.join('\n');
+}
+
+/** A new kind without a case here does not compile: the function would miss a return. */
+function describeLockChange(change: LockChange): string {
+  switch (change.kind) {
+    case LockChangeKind.Added:
+      return `Locked ${change.source} at ${shortenCommit(change.to)} in ${LOCK_FILE}.`;
+    case LockChangeKind.Moved:
+      return `Moved ${change.source} from ${shortenCommit(change.from)} to ${shortenCommit(change.to)}.`;
+    case LockChangeKind.Current:
+      return `${change.source} is already at the latest commit, ${shortenCommit(change.to)}.`;
+    case LockChangeKind.Removed:
+      return `Removed ${change.source} from ${LOCK_FILE}: no preset extends it now.`;
+  }
+}
+
+/** The first 7 characters, as git shows a commit. */
+function shortenCommit(commit: string): string {
+  return commit.slice(0, 7);
 }
 
 /** For example `AGENTS.md, CLAUDE.md and .claude/settings.json`. */

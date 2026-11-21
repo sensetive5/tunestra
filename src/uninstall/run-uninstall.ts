@@ -1,9 +1,9 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { writeOutputs } from '../setup/write-outputs.ts';
-import { PROJECT_DIR } from '../shared/constants/files.ts';
+import { LOCK_FILE, PROJECT_DIR } from '../shared/constants/files.ts';
 import { STATE_DIR } from '../shared/constants/output.ts';
-import { removeDirIfEmpty } from '../shared/utils/fs.ts';
+import { readFileIfExists, removeDirIfEmpty } from '../shared/utils/fs.ts';
 import { isString } from '../shared/utils/guards.ts';
 import { mapSettled } from '../shared/utils/settled.ts';
 import { readState } from '../state/read-state.ts';
@@ -25,8 +25,8 @@ export type UninstallReport = {
 };
 
 /**
- * Removes everything that the last setup generated, the block in .gitignore and
- * .tunestra/state/. The sources, tunestra.yaml and .tunestra/, stay.
+ * Removes everything that the last setup generated, the block in .gitignore,
+ * tunestra.lock.yaml and .tunestra/state/. The sources, tunestra.yaml and .tunestra/, stay.
  */
 export async function runUninstall(
   projectDir: string,
@@ -40,7 +40,10 @@ export async function runUninstall(
   const removable = checks.filter((check) => check.isRemovable);
   const mergePlan = await planMerges(projectDir, [], state.merges);
   const outputRemovals = removable.map((check) => check.path);
-  const removals = [...outputRemovals, ...mergePlan.removals];
+  const lockFile = join(projectDir, LOCK_FILE);
+  const lockContent = await readFileIfExists(lockFile);
+  const lockRemovals = lockContent === undefined ? [] : [LOCK_FILE];
+  const removals = [...outputRemovals, ...mergePlan.removals, ...lockRemovals];
   const updates = mergePlan.writes.map((write) => write.path);
   const warnings = checks.map((check) => check.warning).filter(isString);
   const report = {
