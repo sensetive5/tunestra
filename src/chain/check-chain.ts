@@ -7,7 +7,9 @@ export function findLevelProblems(graph: PresetGraph): ReadonlyArray<string> {
   const problems: Array<string> = [];
   const links = [...graph.parents];
 
-  for (const [dir, parentDirs] of links) {
+  for (const entry of links) {
+    const dir = entry[0];
+    const parentDirs = entry[1];
     const child = graph.levels.get(dir);
 
     if (child === undefined) {

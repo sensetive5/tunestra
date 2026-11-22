@@ -31,13 +31,20 @@ export async function planSync(
   const paths = plan.outputs.map((output) => output.path);
   const outputPaths = new Set(paths);
   const previousEntries = Object.entries(previous.outputs);
-  const staleEntries = previousEntries.filter(([path]) => outputPaths.has(path) === false);
+  const staleEntries = previousEntries.filter((entry) => {
+    const path = entry[0];
+
+    return outputPaths.has(path) === false;
+  });
 
   const outputChecks = await mapSettled(plan.outputs, (output) => checkOutput(output, context));
   const mergePlan = await planMerges(projectDir, plan.merges, previous.merges);
-  const staleChecks = await mapSettled(staleEntries, ([path, record]) =>
-    checkStaleOutput(projectDir, path, record),
-  );
+  const staleChecks = await mapSettled(staleEntries, (entry) => {
+    const path = entry[0];
+    const record = entry[1];
+
+    return checkStaleOutput(projectDir, path, record);
+  });
 
   const staleRemovals = staleChecks.filter((check) => check.isRemovable).map((check) => check.path);
   const removals = [...staleRemovals, ...mergePlan.removals];

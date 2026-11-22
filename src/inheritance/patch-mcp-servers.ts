@@ -10,7 +10,9 @@ export const patchMcpServers: PatchArtifacts<McpServer> = (inherited, level) => 
   const patchEntries = Object.entries(patches);
   const problems: Array<string> = [];
 
-  for (const [key, patch] of patchEntries) {
+  for (const entry of patchEntries) {
+    const key = entry[0];
+    const patch = entry[1];
     const server = inherited.get(key);
 
     if (server === undefined) {

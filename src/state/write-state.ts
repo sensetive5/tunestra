@@ -24,7 +24,7 @@ export async function writeState(projectDir: string, state: SetupState): Promise
 function sortByKey<TValue>(record: Readonly<Record<string, TValue>>): Record<string, TValue> {
   const entries = Object.entries(record);
   // By code points, like the paths before; keys are unique, so two are never equal.
-  const sorted = entries.toSorted(([left], [right]) => (left < right ? -1 : 1));
+  const sorted = entries.toSorted((left, right) => (left[0] < right[0] ? -1 : 1));
 
   return Object.fromEntries(sorted);
 }

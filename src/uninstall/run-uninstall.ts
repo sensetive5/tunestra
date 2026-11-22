@@ -34,9 +34,12 @@ export async function runUninstall(
 ): Promise<UninstallReport> {
   const state = await readState(projectDir);
   const entries = Object.entries(state.outputs);
-  const checks = await mapSettled(entries, ([path, record]) =>
-    checkStaleOutput(projectDir, path, record),
-  );
+  const checks = await mapSettled(entries, (entry) => {
+    const path = entry[0];
+    const record = entry[1];
+
+    return checkStaleOutput(projectDir, path, record);
+  });
   const removable = checks.filter((check) => check.isRemovable);
   const mergePlan = await planMerges(projectDir, [], state.merges);
   const outputRemovals = removable.map((check) => check.path);
