@@ -39,7 +39,9 @@ export function planLock(
   const changes: Array<LockChange> = [];
   const nextEntries = Object.entries(next);
 
-  for (const [source, locked] of nextEntries) {
+  for (const entry of nextEntries) {
+    const source = entry[0];
+    const locked = entry[1];
     const before = previous[source];
     const to = locked.commit;
 
@@ -77,7 +79,9 @@ export function planLock(
 
   const previousEntries = Object.entries(previous);
 
-  for (const [source, before] of previousEntries) {
+  for (const entry of previousEntries) {
+    const source = entry[0];
+    const before = entry[1];
     const isUsed = source in next;
 
     if (isUsed) {
@@ -104,13 +108,12 @@ function checkSameSources(previous: LockedSources, next: LockedSources): boolean
   const previousKeys = Object.keys(previous);
   const nextEntries = Object.entries(next);
   const hasSameCount = previousKeys.length === nextEntries.length;
+  const hasSameCommits = nextEntries.every((entry) => {
+    const locked = entry[1];
+    const before = previous[entry[0]];
 
-  return (
-    hasSameCount &&
-    nextEntries.every(([source, locked]) => {
-      const before = previous[source];
+    return before?.commit === locked.commit && before.integrity === locked.integrity;
+  });
 
-      return before?.commit === locked.commit && before.integrity === locked.integrity;
-    })
-  );
+  return hasSameCount && hasSameCommits;
 }

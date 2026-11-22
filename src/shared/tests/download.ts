@@ -45,7 +45,10 @@ export function createFakeDownload(repositories: Readonly<Record<string, string>
 
   const entries = Object.entries(repositories);
 
-  for (const [repository, dir] of entries) {
+  for (const entry of entries) {
+    const repository = entry[0];
+    const dir = entry[1];
+
     publish(repository, dir);
   }
 
