@@ -109,8 +109,9 @@ function checkSameSources(previous: LockedSources, next: LockedSources): boolean
   const nextEntries = Object.entries(next);
   const hasSameCount = previousKeys.length === nextEntries.length;
   const hasSameCommits = nextEntries.every((entry) => {
+    const source = entry[0];
     const locked = entry[1];
-    const before = previous[entry[0]];
+    const before = previous[source];
 
     return before?.commit === locked.commit && before.integrity === locked.integrity;
   });

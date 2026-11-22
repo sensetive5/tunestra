@@ -38,7 +38,11 @@ export function selectUpdated(
 
   const updated = new Set(target.map((name) => findLockedKey(name, lockedKeys)));
   const entries = Object.entries(locked);
-  const keptEntries = entries.filter((entry) => updated.has(entry[0]) === false);
+  const keptEntries = entries.filter((entry) => {
+    const key = entry[0];
+
+    return updated.has(key) === false;
+  });
   const kept = Object.fromEntries(keptEntries);
 
   return {
