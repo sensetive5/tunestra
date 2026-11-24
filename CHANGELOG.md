@@ -1,5 +1,11 @@
 # tunestra
 
+## 0.8.0
+
+### Minor Changes
+
+- 4173da7: Add `tunestra.lock.yaml`: setup locks every git preset at its exact commit, so the whole team gets the same presets until `tunestra update` moves them.
+
 ## 0.7.0
 
 ### Minor Changes
