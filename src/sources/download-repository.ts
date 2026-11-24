@@ -1,11 +1,9 @@
 import { type DownloadTemplateOptions, downloadTemplate } from 'giget';
+import { GIT_TOKEN_VARIABLE } from '../shared/constants/sources.ts';
 import { getErrorMessage } from '../shared/errors/get-error-message.ts';
 import { TunestraError } from '../shared/errors/tunestra-error.ts';
 import type { DownloadRepository } from '../shared/types/source.ts';
 import { describeRepository } from './parse-git-source.ts';
-
-/** Token for private repositories; tunestra's own name, whatever does the download. */
-const GIT_TOKEN_VARIABLE = 'TUNESTRA_GIT_TOKEN';
 
 /** Downloads a repository as an archive over HTTPS, so git is not needed. */
 export const downloadRepository: DownloadRepository = async (source, dir) => {

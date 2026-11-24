@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from '@commander-js/extra-typings';
 import { VERSION } from '../index.ts';
+import type { UpdateTarget } from '../lock/select-updated.ts';
 import { describeInit } from './commands/init.ts';
 import { describeSetup } from './commands/setup.ts';
 import { describeUninstall } from './commands/uninstall.ts';
@@ -39,6 +40,23 @@ program
     const projectDir = process.cwd();
 
     await runCommand(() => describeSetup(projectDir, options));
+  });
+
+program
+  .command('update')
+  .description('Move git presets to the latest commit of their refs and run setup')
+  .argument('[sources...]', 'git sources to update, like github:org/presets#v1; all by default')
+  .option('--dry-run', 'show the plan without writing files', false)
+  .action(async (sources, options) => {
+    const projectDir = process.cwd();
+    const update: UpdateTarget = sources.length === 0 ? 'all' : sources;
+    const setupOptions = {
+      dryRun: options.dryRun,
+      verbose: false,
+      update,
+    };
+
+    await runCommand(() => describeSetup(projectDir, setupOptions));
   });
 
 program

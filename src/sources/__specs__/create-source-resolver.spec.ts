@@ -41,7 +41,7 @@ describe('createSourceResolver', () => {
     const fake = createFakeDownload({
       [REPOSITORY]: repositoryDir,
     });
-    const resolver = createSourceResolver(projectDir, fake.download);
+    const resolver = createSourceResolver(projectDir, { download: fake.download });
 
     const teamLoading = resolver.resolve('github:org/presets/team#v1', projectDir);
     const baseLoading = resolver.resolve('github:org/presets/base#v1', projectDir);
@@ -58,7 +58,7 @@ describe('createSourceResolver', () => {
     const fake = createFakeDownload({
       [REPOSITORY]: repositoryDir,
     });
-    const resolver = createSourceResolver(projectDir, fake.download);
+    const resolver = createSourceResolver(projectDir, { download: fake.download });
     const teamDir = await resolver.resolve('github:org/presets/team#v1', projectDir);
 
     const baseDir = await resolver.resolve('../base', teamDir);
@@ -73,7 +73,7 @@ describe('createSourceResolver', () => {
     const fake = createFakeDownload({
       [REPOSITORY]: repositoryDir,
     });
-    const resolver = createSourceResolver(projectDir, fake.download);
+    const resolver = createSourceResolver(projectDir, { download: fake.download });
     const teamDir = await resolver.resolve('github:org/presets/team#v1', projectDir);
 
     const result = resolver.resolve('../../../../../../..', teamDir);
@@ -84,7 +84,7 @@ describe('createSourceResolver', () => {
   it('reports a repository that cannot be downloaded', async () => {
     const projectDir = await createTempDir('project');
     const fake = createFakeDownload({});
-    const resolver = createSourceResolver(projectDir, fake.download);
+    const resolver = createSourceResolver(projectDir, { download: fake.download });
 
     const result = resolver.resolve('github:org/missing/team#v1', projectDir);
 

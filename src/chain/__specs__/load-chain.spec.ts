@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createFakeDownload } from '../../shared/tests/download.ts';
 import { BASIC_INPUT } from '../../shared/tests/fixtures.ts';
 import { createTree } from '../../shared/tests/temp.ts';
+import { createSourceResolver } from '../../sources/create-source-resolver.ts';
 import { loadChain } from '../load-chain.ts';
 
 describe('loadChain', () => {
@@ -105,8 +106,9 @@ describe('loadChain', () => {
     const fake = createFakeDownload({
       'github:org/presets#v1': join(root, 'repository'),
     });
+    const resolver = createSourceResolver(projectDir, { download: fake.download });
 
-    const chain = await loadChain(projectDir, { download: fake.download });
+    const chain = await loadChain(projectDir, { resolver });
 
     const remotes = chain.levels.map((level) => level.remote);
     expect(remotes).toEqual([

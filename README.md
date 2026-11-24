@@ -45,8 +45,9 @@ extends:
 agents: [claude]            # add more: [claude, codex, cursor]
 ```
 
-Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md`, `CLAUDE.md` and, when presets set `env` or
-`permissions`, `.claude/settings.json`. Everything else that tunestra generates is listed in `.gitignore`
+Commit `tunestra.yaml`, `.tunestra/`, `AGENTS.md`, `CLAUDE.md`, `tunestra.lock.yaml` with the
+commits of git presets and, when presets set `env` or `permissions`, `.claude/settings.json`.
+Everything else that tunestra generates is listed in `.gitignore`
 automatically.
 
 ## Principles
@@ -174,13 +175,38 @@ the rules of Claude Code stay. A variable that you changed by hand is yours and 
 | GitHub | `github:<owner>/<repo>/<path>#<ref>` |
 | GitLab | `gitlab:<owner>/<repo>/<path>#<ref>` |
 
-Pin git sources to a tag or commit. tunestra downloads the whole repository at that ref
+Pin git sources to a tag or commit. tunestra downloads the whole repository
 into `.tunestra/state/sources/` on every setup, so a preset can extend other presets of its
 repository with a relative path, like `../base`. A relative path cannot leave the repository.
 Git is not needed: repositories are downloaded as archives over HTTPS.
 
 For a private repository, set the `TUNESTRA_GIT_TOKEN` environment variable to a token with
-read access. Lockfiles and npm sources are planned for v0.4.
+read access. npm sources are planned for v0.4.
+
+### Lock file: `tunestra.lock.yaml`
+
+A tag can move, and a branch moves with every commit. So the first setup writes the exact
+commit of every git source to `tunestra.lock.yaml`, and the next runs download that commit:
+the whole team gets the same presets until somebody moves them on purpose. Commit the file.
+
+```yaml
+version: 1
+sources:
+  github:<organisation_name>/<presets_repo>#v1:
+    commit: c9f077f0be2838d45cf7592f1f57615810b3973c
+    integrity: sha256-SWhwFkGCFIRmmUgo8lLptZ35uRtzpGY0Et1qSlzaJeo=
+```
+
+- `integrity` is a hash of every file in the repository at that commit. When the files differ,
+  setup stops.
+- A new source in `extends` is added to the file, and a source that no preset extends is
+  removed from it. setup says so in a note.
+- `tunestra update` moves every source to the latest commit of its ref, and
+  `tunestra update github:<organisation_name>/<presets_repo>#v1` moves only one.
+- Git sources of the personal level are not locked: the file is shared, and the personal
+  level is not.
+
+To find the commit, tunestra asks the API of GitHub or GitLab with the same token.
 
 ## Inheritance
 
@@ -241,6 +267,7 @@ For every agent:
 | `.tunestra/state/` | What tunestra generated last time | no |
 | `AGENTS.override.md`, `CLAUDE.local.md` | The personal level, when there is one | no |
 | `.gitignore` | A block between `# >>> tunestra` and `# <<< tunestra` | yes |
+| `tunestra.lock.yaml` | The exact commits of git sources, when there are any | yes |
 
 ### Claude Code
 
@@ -378,8 +405,9 @@ Generated files are never kept because of manual edits: change the sources inste
 | `tunestra init --local` | Creates your personal level, `tunestra.local.yaml` and `.tunestra.local/rules/`, in a project with `tunestra.yaml`. `--extends` adds personal presets |
 | `tunestra setup` | Resolves the chain and regenerates every output |
 | `tunestra setup --dry-run` | Prints what would be written or removed, and the warnings |
+| `tunestra update [sources...]` | Moves git sources to the latest commit of their refs in `tunestra.lock.yaml`, all by default, and runs setup. `--dry-run` shows the plan first |
 | `tunestra setup --verbose` | Also prints where every artifact comes from and what it overrides |
-| `tunestra uninstall` | Removes everything tunestra generated and its block in `.gitignore`, and takes its entries out of `.claude/settings.local.json`; the sources stay. `--dry-run` shows the list first |
+| `tunestra uninstall` | Removes everything tunestra generated, `tunestra.lock.yaml` and its block in `.gitignore`, and takes its entries out of `.claude/settings.local.json`; the sources stay. `--dry-run` shows the list first |
 
 `tunestra setup` refuses to overwrite an `AGENTS.md` or `CLAUDE.md` that it did not generate
 and tells you where to move their text.
@@ -391,7 +419,7 @@ and tells you where to move their text.
 | v0.1 | Inheritance for Claude Code |
 | v0.2 | Codex (this document) |
 | v0.3 | `env`, permissions, subagents, a personal `local` level and Cursor |
-| v0.4 | Spaces, npm sources, lockfile |
+| v0.4 | Lock file, spaces, npm sources |
 | v0.5 | `required` / `locked` policies, CI check |
 | v0.6 | Hooks |
 | v0.7 | LLM gateway |
