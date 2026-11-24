@@ -35,7 +35,9 @@ function mergeEnv(
   const previousEnv = previous?.env ?? {};
   const previousEntries = Object.entries(previousEnv);
 
-  for (const [name, value] of previousEntries) {
+  for (const entry of previousEntries) {
+    const name = entry[0];
+    const value = entry[1];
     const isUnchanged = env[name] === value;
 
     if (isUnchanged) {

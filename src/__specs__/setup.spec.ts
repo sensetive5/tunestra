@@ -98,7 +98,9 @@ async function runFixture(name: string): Promise<void> {
   const symlinks = symlinksSchema.parse(symlinksData);
   const symlinkEntries = Object.entries(symlinks);
 
-  for (const [link, target] of symlinkEntries) {
+  for (const entry of symlinkEntries) {
+    const link = entry[0];
+    const target = entry[1];
     const linkPath = join(project, link);
     const actualTarget = await readlink(linkPath);
 

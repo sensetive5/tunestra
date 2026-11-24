@@ -10,9 +10,14 @@ export function createEnvVariables(
   const source = relativePosix(artifactsDir, manifestPath);
   const entries = Object.entries(env);
 
-  return entries.map(([key, value]) => ({
-    key,
-    source,
-    value,
-  }));
+  return entries.map((entry) => {
+    const key = entry[0];
+    const value = entry[1];
+
+    return {
+      key,
+      source,
+      value,
+    };
+  });
 }

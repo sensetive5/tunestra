@@ -15,7 +15,9 @@ export async function createTree(files: Record<string, string>): Promise<string>
   const root = await createTempDir('tree');
   const entries = Object.entries(files);
 
-  for (const [path, content] of entries) {
+  for (const entry of entries) {
+    const path = entry[0];
+    const content = entry[1];
     const file = join(root, path);
     const dir = dirname(file);
 
