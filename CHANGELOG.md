@@ -1,5 +1,11 @@
 # tunestra
 
+## 0.8.1
+
+### Patch Changes
+
+- 66dd336: `tunestra update` prints a link to the changes between the old and the new commit of every moved git source, so that reviewers of the update do not compare the commits by hand.
+
 ## 0.8.0
 
 ### Minor Changes
