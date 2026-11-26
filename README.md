@@ -204,7 +204,8 @@ sources:
 - `tunestra update` moves every source to the latest commit of its ref, and
   `tunestra update github:<organisation_name>/<presets_repo>#v1` moves only one. For every
   moved source it prints a link to the changes on GitHub or GitLab: put it in the pull request
-  of the update.
+  of the update. `--summary` prints only a markdown table of the changes with these links, so
+  it can go straight into the pull request: `tunestra update --summary | gh pr create --body-file -`.
 - Git sources of the personal level are not locked: the file is shared, and the personal
   level is not.
 
@@ -407,7 +408,7 @@ Generated files are never kept because of manual edits: change the sources inste
 | `tunestra init --local` | Creates your personal level, `tunestra.local.yaml` and `.tunestra.local/rules/`, in a project with `tunestra.yaml`. `--extends` adds personal presets |
 | `tunestra setup` | Resolves the chain and regenerates every output |
 | `tunestra setup --dry-run` | Prints what would be written or removed, and the warnings |
-| `tunestra update [sources...]` | Moves git sources to the latest commit of their refs in `tunestra.lock.yaml`, all by default, and runs setup. `--dry-run` shows the plan first |
+| `tunestra update [sources...]` | Moves git sources to the latest commit of their refs in `tunestra.lock.yaml`, all by default, and runs setup. `--dry-run` shows the plan first; `--summary` prints only a markdown table of the changes for the pull request |
 | `tunestra setup --verbose` | Also prints where every artifact comes from and what it overrides |
 | `tunestra uninstall` | Removes everything tunestra generated, `tunestra.lock.yaml` and its block in `.gitignore`, and takes its entries out of `.claude/settings.local.json`; the sources stay. `--dry-run` shows the list first |
 

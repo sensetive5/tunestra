@@ -122,6 +122,23 @@ describe('describeSetup', () => {
       );
     });
 
+    it('prints only a table of the changes with the summary option', async () => {
+      const project = await createGitProject();
+      const options = createOptions(project.fake);
+      await describeSetup(project.projectDir, options);
+      project.fake.publish(REPOSITORY, join(project.root, 'v2'));
+
+      const summary = await describeSetup(project.projectDir, {
+        ...options,
+        update: 'all',
+        summary: true,
+      });
+
+      expect(summary).toMatch(/^\| Source \| Change \|/);
+      expect(summary).toContain(`| \`${REPOSITORY}\` | [`);
+      expect(summary).not.toContain('Generated');
+    });
+
     it('says that an updated source is already current', async () => {
       const project = await createGitProject();
       const options = createOptions(project.fake);
