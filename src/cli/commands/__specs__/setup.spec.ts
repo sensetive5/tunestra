@@ -105,16 +105,21 @@ describe('describeSetup', () => {
       const project = await createGitProject();
       const options = createOptions(project.fake);
       await describeSetup(project.projectDir, options);
-      const oldCommit = project.fake.findCommit(REPOSITORY).slice(0, 7);
+      const oldCommit = project.fake.findCommit(REPOSITORY);
       project.fake.publish(REPOSITORY, join(project.root, 'v2'));
-      const newCommit = project.fake.findCommit(REPOSITORY).slice(0, 7);
+      const newCommit = project.fake.findCommit(REPOSITORY);
+      const oldShort = oldCommit.slice(0, 7);
+      const newShort = newCommit.slice(0, 7);
 
       const summary = await describeSetup(project.projectDir, {
         ...options,
         update: 'all',
       });
 
-      expect(summary).toContain(`Moved ${REPOSITORY} from ${oldCommit} to ${newCommit}.`);
+      expect(summary).toContain(`Moved ${REPOSITORY} from ${oldShort} to ${newShort}.`);
+      expect(summary).toContain(
+        `https://github.com/org/presets/compare/${oldCommit}...${newCommit}`,
+      );
     });
 
     it('says that an updated source is already current', async () => {

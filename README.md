@@ -202,7 +202,9 @@ sources:
 - A new source in `extends` is added to the file, and a source that no preset extends is
   removed from it. setup says so in a note.
 - `tunestra update` moves every source to the latest commit of its ref, and
-  `tunestra update github:<organisation_name>/<presets_repo>#v1` moves only one.
+  `tunestra update github:<organisation_name>/<presets_repo>#v1` moves only one. For every
+  moved source it prints a link to the changes on GitHub or GitLab: put it in the pull request
+  of the update.
 - Git sources of the personal level are not locked: the file is shared, and the personal
   level is not.
 

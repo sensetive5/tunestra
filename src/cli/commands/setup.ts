@@ -1,9 +1,10 @@
 import pc from 'picocolors';
-import { type LockChange, LockChangeKind, type LockPlan } from '../../lock/plan-lock.ts';
+import type { LockPlan } from '../../lock/plan-lock.ts';
 import { runSetup, type SetupOptions } from '../../setup/run-setup.ts';
 import { LOCK_FILE } from '../../shared/constants/files.ts';
 import type { SetupPlan } from '../../shared/types/output.ts';
 import type { SyncPlan } from '../../sync/plan-sync.ts';
+import { describeLockChange } from './describe-lock-change.ts';
 import { describeResolution } from './describe-resolution.ts';
 
 export type SetupCommandOptions = SetupOptions & {
@@ -62,25 +63,6 @@ function describeSync(
   lines.push(`Commit ${committedFiles}; the rest is in .gitignore.`);
 
   return lines.join('\n');
-}
-
-/** A new kind without a case here does not compile: the function would miss a return. */
-function describeLockChange(change: LockChange): string {
-  switch (change.kind) {
-    case LockChangeKind.Added:
-      return `Locked ${change.source} at ${shortenCommit(change.to)} in ${LOCK_FILE}.`;
-    case LockChangeKind.Moved:
-      return `Moved ${change.source} from ${shortenCommit(change.from)} to ${shortenCommit(change.to)}.`;
-    case LockChangeKind.Current:
-      return `${change.source} is already at the latest commit, ${shortenCommit(change.to)}.`;
-    case LockChangeKind.Removed:
-      return `Removed ${change.source} from ${LOCK_FILE}: no preset extends it now.`;
-  }
-}
-
-/** The first 7 characters, as git shows a commit. */
-function shortenCommit(commit: string): string {
-  return commit.slice(0, 7);
 }
 
 /** For example `AGENTS.md, CLAUDE.md and .claude/settings.json`. */
