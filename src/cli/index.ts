@@ -47,12 +47,14 @@ program
   .description('Move git presets to the latest commit of their refs and run setup')
   .argument('[sources...]', 'git sources to update, like github:org/presets#v1; all by default')
   .option('--dry-run', 'show the plan without writing files', false)
+  .option('--summary', 'print only a markdown table of the changes, for a pull request', false)
   .action(async (sources, options) => {
     const projectDir = process.cwd();
     const update: UpdateTarget = sources.length === 0 ? 'all' : sources;
     const setupOptions = {
       dryRun: options.dryRun,
       verbose: false,
+      summary: options.summary,
       update,
     };
 

@@ -6,7 +6,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/__specs__/**', 'src/shared/tests/**'],
+      exclude: [
+        'src/**/__specs__/**',
+        'src/shared/tests/**',
+        // Only the wiring of commander: the commands themselves are tested.
+        'src/cli/index.ts',
+      ],
       reporter: ['text-summary', 'lcov'],
     },
   },

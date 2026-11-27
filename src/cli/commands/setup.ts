@@ -4,12 +4,14 @@ import { runSetup, type SetupOptions } from '../../setup/run-setup.ts';
 import { LOCK_FILE } from '../../shared/constants/files.ts';
 import type { SetupPlan } from '../../shared/types/output.ts';
 import type { SyncPlan } from '../../sync/plan-sync.ts';
-import { describeLockChange } from './describe-lock-change.ts';
+import { describeLockChange, describeLockSummary } from './describe-lock-change.ts';
 import { describeResolution } from './describe-resolution.ts';
 
 export type SetupCommandOptions = SetupOptions & {
   /** Also print where every artifact comes from. */
   verbose: boolean;
+  /** Print only a markdown table of the changed sources, for a pull request. */
+  summary?: boolean;
 };
 
 export async function describeSetup(
@@ -17,6 +19,11 @@ export async function describeSetup(
   options: SetupCommandOptions,
 ): Promise<string> {
   const report = await runSetup(projectDir, options);
+
+  if (options.summary === true) {
+    return describeLockSummary(report.lock.changes);
+  }
+
   const summary = describeSync(report.plan, report.sync, report.lock, options);
 
   if (options.verbose) {
